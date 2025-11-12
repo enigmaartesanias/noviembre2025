@@ -6,16 +6,6 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
-      {
-        "source": "/index.html",
-        "destination": "/"
-      },
-      {
-        "source": "**", 
-        "destination": "/index.html"
-      }
-    ],
     "redirects": [
       {
         "source": "/index.html",
@@ -23,7 +13,47 @@
         "type": 301
       }
     ],
+    "rewrites": [
+      {
+        "source": "/sitemap.xml",
+        "destination": "/sitemap.xml"
+      },
+      {
+        "source": "/robots.txt",
+        "destination": "/robots.txt"
+      },
+      {
+        "source": "**", 
+        "destination": "/index.html"
+      }
+    ],
     "headers": [
+      {
+        "source": "/robots.txt",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          },
+          {
+            "key": "Content-Type",
+            "value": "text/plain"
+          }
+        ]
+      },
+      {
+        "source": "/sitemap.xml",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/xml"
+          }
+        ]
+      },
       {
         "source": "**/*.{js,css}",
         "headers": [
