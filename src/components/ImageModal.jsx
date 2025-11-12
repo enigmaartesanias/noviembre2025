@@ -91,17 +91,17 @@ const ImageModal = ({ isOpen, onClose, imageUrl, productUrl }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm p-4"
       onClick={handleBackgroundClick}
     >
-      <div className="relative p-4 max-w-5xl w-full h-full flex flex-col items-center justify-center">
+      <div className="relative bg-white rounded-lg shadow-2xl max-w-md sm:max-w-lg md:max-w-2xl w-full overflow-hidden">
         {/* Botón de cierre elegante */}
         <button
-          className="absolute top-6 right-6 bg-white bg-opacity-20 hover:bg-opacity-40 text-white p-2 rounded-full transition-all duration-200 z-10 shadow-lg hover:scale-110"
+          className="absolute top-3 right-3 bg-gray-200 hover:bg-gray-300 text-gray-800 p-2 rounded-full transition-all duration-200 z-20 shadow-lg hover:scale-110"
           onClick={onClose}
           title="Cerrar"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -122,18 +122,16 @@ const ImageModal = ({ isOpen, onClose, imageUrl, productUrl }) => {
                 <img
                   src={imageUrl}
                   alt="Imagen ampliada del producto"
-                  className="w-full h-auto rounded-lg shadow-2xl max-h-[80vh] object-contain cursor-grab active:cursor-grabbing"
+                  className="w-full h-auto max-h-[60vh] sm:max-h-[70vh] md:max-h-[80vh] object-contain"
                 />
               </TransformComponent>
 
               {/* Controles de zoom - Panel mejorado */}
-              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 z-10 bg-black bg-opacity-60 p-4 rounded-full backdrop-blur-sm shadow-2xl">
+              <div className="flex gap-2 p-4 bg-gray-50 border-t border-gray-200 justify-center flex-wrap">
                 <button
                   onClick={() => zoomOut()}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-40 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 w-10 h-10 flex items-center justify-center"
-                  title="Alejarse (-)
-
-"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110 w-10 h-10 flex items-center justify-center"
+                  title="Alejarse (-)"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -141,14 +139,14 @@ const ImageModal = ({ isOpen, onClose, imageUrl, productUrl }) => {
                 </button>
                 <button
                   onClick={() => resetTransform()}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-40 text-white px-3 py-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 text-sm font-medium"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-full shadow-md transition-all duration-200 hover:scale-110 text-sm font-medium"
                   title="Reiniciar vista"
                 >
                   Restablecer
                 </button>
                 <button
                   onClick={() => zoomIn()}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-40 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 w-10 h-10 flex items-center justify-center"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110 w-10 h-10 flex items-center justify-center"
                   title="Acercarse (+)"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +155,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, productUrl }) => {
                 </button>
                 <button
                   onClick={handleShare}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-40 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 w-10 h-10 flex items-center justify-center"
+                  className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full shadow-md transition-all duration-200 hover:scale-110 w-10 h-10 flex items-center justify-center"
                   title="Compartir enlace"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +166,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, productUrl }) => {
 
               {/* Menú de compartir */}
               {showShareMenu && (
-                <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 bg-opacity-95 backdrop-blur-sm rounded-lg shadow-2xl p-4 z-20 min-w-[280px]">
+                <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-900 bg-opacity-95 backdrop-blur-sm rounded-lg shadow-2xl p-4 z-20 min-w-[280px]">
                   <h3 className="text-white text-sm font-semibold mb-3">Compartir por medio</h3>
                   <div className="grid grid-cols-2 gap-2">
                     {shareOptions.map((option, idx) => (
@@ -186,7 +184,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, productUrl }) => {
               )}
 
               {/* Instrucciones */}
-              <div className="absolute bottom-6 right-6 text-white text-xs bg-black bg-opacity-60 px-3 py-2 rounded-lg backdrop-blur-sm hidden md:block">
+              <div className="text-center text-gray-600 text-xs p-3 bg-gray-50 border-t border-gray-200 hidden md:block">
                 💡 Doble clic para zoom • Rueda para acercar/alejar • Arrastra para mover
               </div>
             </>
