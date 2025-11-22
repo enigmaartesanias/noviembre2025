@@ -1,4 +1,3 @@
-// src/components/Galeria.jsx
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -6,35 +5,35 @@ import { useState, useEffect } from "react";
 // 1. DATOS Y CONFIGURACIÓN
 // ==========================================
 
+const DEFAULT_SUBTITLE = "Diseños exclusivos hechos a mano";
+
+const BASE_ROUTES = {
+    plata: {
+        aretes: "/catalogo/Plata/ARETE",
+        pulseras: "/catalogo/Plata/PULSERA",
+        anillos: "/catalogo/Plata/ANILLO",
+        collares: "/catalogo/Plata/COLLAR",
+    },
+    alpaca: {
+        aretes: "/catalogo/Alpaca/ARETE",
+        pulseras: "/catalogo/Alpaca/PULSERA",
+        anillos: "/catalogo/Alpaca/ANILLO",
+        collares: "/catalogo/Alpaca/COLLAR",
+    },
+    cobre: {
+        aretes: "/catalogo/Cobre/ARETE",
+        pulseras: "/catalogo/Cobre/PULSERA",
+        anillos: "/catalogo/Cobre/ANILLO",
+        collares: "/catalogo/Cobre/COLLAR",
+    },
+};
+
 const CATEGORIES = [
     { name: "Aretes", slug: "aretes" },
     { name: "Pulseras", slug: "pulseras" },
     { name: "Anillos", slug: "anillos" },
     { name: "Collares", slug: "collares" },
 ];
-
-const BASE_ROUTES = {
-    plata: {
-        aretes: "/plataaretes",
-        pulseras: "/platapulseras",
-        anillos: "/plataanillos",
-        collares: "/platacollares",
-    },
-    alpaca: {
-        aretes: "/alpacaaretes",
-        pulseras: "/alpacapulseras",
-        anillos: "/alpacaanillos",
-        collares: "/alpacacollares",
-    },
-    cobre: {
-        aretes: "/cobrearetes",
-        pulseras: "/cobrepulseras",
-        anillos: "/cobreanillos",
-        collares: "/cobrecollares",
-    },
-};
-
-const DEFAULT_SUBTITLE = "Diseños exclusivos hechos a mano"; 
 
 const MATERIAL_CARDS = [
     {
@@ -62,11 +61,11 @@ const MATERIAL_CARDS = [
         isCustom: false,
     },
     {
-        name: "Diseños Personalizados", 
+        name: "Diseños Personalizados",
         key: "custom",
         description: DEFAULT_SUBTITLE,
         imageSrc: "/images/per10.jpg",
-        link: "/personalizado",
+        link: "/catalogo/all/PERSONALIZADO",
         isCustom: true,
     },
 ];
@@ -247,7 +246,7 @@ const Galeria = () => {
     };
 
     return (
-        <section 
+        <section
             className="py-8 bg-gray-100 font-sans" // 👈 Cambiado de py-12 a py-8
             onClick={() => setActiveCard(null)}
         >
@@ -262,10 +261,10 @@ const Galeria = () => {
                 </div>
 
                 {/* Flex row en desktop, column en móvil */}
-                <div className="flex flex-col lg:flex-row lg:justify-between lg:gap-6"> {/* Reducido gap de 8 a 6 */}
+                <div className="flex flex-col gap-8 lg:flex-row lg:justify-between lg:gap-6"> {/* Agregado gap-8 para móvil */}
                     {MATERIAL_CARDS.map((card) => (
-                        <div 
-                            key={card.key} 
+                        <div
+                            key={card.key}
                             className="flex flex-col bg-white p-4 rounded-xl shadow-xl transition-shadow duration-300 hover:shadow-2xl w-full lg:w-[23.5%]" // Ancho aumentado a 23.5%
                         >
                             <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 tracking-tight mb-1 text-center">
@@ -274,7 +273,7 @@ const Galeria = () => {
                             <p className="text-xs sm:text-sm text-gray-600 mb-3 text-center"> {/* Reducido mb de 6 a 3 */}
                                 {card.description}
                             </p>
-                            
+
                             <MaterialCard
                                 card={card}
                                 isActive={activeCard === card.key}
