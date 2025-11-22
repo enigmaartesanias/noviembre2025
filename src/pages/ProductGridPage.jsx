@@ -171,14 +171,33 @@ const ProductGridPage = () => {
         }
     });
 
+    // Helper para formatear texto a Title Case (primera mayúscula, resto minúscula)
+    const toTitleCase = (str) => {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
+    // Mapeo de categorías singulares a plurales para el título
+    const CATEGORY_DISPLAY_NAMES = {
+        'COLLAR': 'Collares',
+        'ANILLO': 'Anillos',
+        'ARETE': 'Aretes',
+        'PULSERA': 'Pulseras',
+        'PERSONALIZADO': 'Diseños Personalizados'
+    };
+
     // Construye el título de la página
     let pageTitle = "";
     if (material === 'all' && categoria === 'all') {
         pageTitle = "Catálogo Completo";
     } else if (material === 'all') {
-        pageTitle = categoria;
+        const catKey = categoria.toUpperCase();
+        pageTitle = CATEGORY_DISPLAY_NAMES[catKey] || toTitleCase(categoria);
     } else {
-        pageTitle = `${categoria} de ${material}`;
+        const catKey = categoria.toUpperCase();
+        const displayCat = CATEGORY_DISPLAY_NAMES[catKey] || toTitleCase(categoria);
+        const displayMat = toTitleCase(material);
+        pageTitle = `${displayCat} de ${displayMat}`;
     }
 
     if (loading) return <div className="text-center pt-32 text-xl font-medium">Cargando productos...</div>;
@@ -195,7 +214,7 @@ const ProductGridPage = () => {
     return (
         <div className="container mx-auto px-4 py-8 pt-24">
             <div className="flex justify-between items-center mb-2">
-                <h1 className="text-2xl md:text-3xl font-bold capitalize">{pageTitle}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold">{pageTitle}</h1>
                 <select
                     onChange={handleSortChange}
                     value={sortOrder}

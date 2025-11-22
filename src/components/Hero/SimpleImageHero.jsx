@@ -6,7 +6,7 @@ const SimpleImageHero = () => {
   return (
     <div className="w-full flex justify-center bg-gray-100">
       <div
-        className="relative w-full md:max-w-6xl flex items-center justify-center overflow-hidden"
+        className="relative w-full container mx-auto px-3 flex items-center justify-center overflow-hidden"
         style={{ minHeight: '25vh' }} // Altura para móvil
       >
         {/* Contenedor para desktop con mayor altura */}
@@ -20,7 +20,7 @@ const SimpleImageHero = () => {
           loop
           muted
           playsInline
-          style={{ minHeight: '100%', objectPosition: 'right 15%' }} // Alinear a la derecha para ver el logo
+          style={{ minHeight: '100%', objectPosition: 'center' }} // Centrado para mejor visibilidad
         />
 
         {/* Espaciador invisible para forzar altura */}

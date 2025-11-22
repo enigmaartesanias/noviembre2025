@@ -9,22 +9,22 @@ const DEFAULT_SUBTITLE = "Diseños exclusivos hechos a mano";
 
 const BASE_ROUTES = {
     plata: {
-        aretes: "/catalogo/Plata/ARETE",
-        pulseras: "/catalogo/Plata/PULSERA",
-        anillos: "/catalogo/Plata/ANILLO",
-        collares: "/catalogo/Plata/COLLAR",
+        aretes: "/catalogo/Plata/Arete",
+        pulseras: "/catalogo/Plata/Pulsera",
+        anillos: "/catalogo/Plata/Anillo",
+        collares: "/catalogo/Plata/Collar",
     },
     alpaca: {
-        aretes: "/catalogo/Alpaca/ARETE",
-        pulseras: "/catalogo/Alpaca/PULSERA",
-        anillos: "/catalogo/Alpaca/ANILLO",
-        collares: "/catalogo/Alpaca/COLLAR",
+        aretes: "/catalogo/Alpaca/Arete",
+        pulseras: "/catalogo/Alpaca/Pulsera",
+        anillos: "/catalogo/Alpaca/Anillo",
+        collares: "/catalogo/Alpaca/Collar",
     },
     cobre: {
-        aretes: "/catalogo/Cobre/ARETE",
-        pulseras: "/catalogo/Cobre/PULSERA",
-        anillos: "/catalogo/Cobre/ANILLO",
-        collares: "/catalogo/Cobre/COLLAR",
+        aretes: "/catalogo/Cobre/Arete",
+        pulseras: "/catalogo/Cobre/Pulsera",
+        anillos: "/catalogo/Cobre/Anillo",
+        collares: "/catalogo/Cobre/Collar",
     },
 };
 
@@ -250,7 +250,7 @@ const Galeria = () => {
             className="py-8 bg-gray-100 font-sans" // 👈 Cambiado de py-12 a py-8
             onClick={() => setActiveCard(null)}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="container mx-auto px-3">
                 <div className="text-center mb-10">
                     <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
                         Colecciones Artesanales
