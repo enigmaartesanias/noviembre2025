@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import ProductImage from '../components/ProductImage'; // Componente de imagen para carga gradual
+
 
 const ProductGridPage = () => {
     // Parámetros dinámicos de la URL
