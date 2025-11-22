@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import ProductImage from '../components/ProductImage';
 
 
 const ProductGridPage = () => {
