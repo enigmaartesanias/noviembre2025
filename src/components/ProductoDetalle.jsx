@@ -74,9 +74,10 @@ const ProductoDetalle = () => {
                     const { data, error } = await supabase
                         .from('productos')
                         .select('*')
-                        .eq('is_novedoso', true)
-                        .neq('id', id)
-                        .order('orden', { ascending: true })
+                        .eq('categoria_id', producto.categoria_id) // Filtrar por la misma categoría
+                        .eq('activo', true) // Solo productos activos
+                        .neq('id', id) // Excluir el producto actual
+                        .order('created_at', { ascending: false }) // Mostrar los más recientes primero
                         .limit(4);
 
                     if (error) throw error;
@@ -202,7 +203,7 @@ const ProductoDetalle = () => {
                                 <img
                                     src={url}
                                     alt={`Imagen ${index + 1}`}
-                                    className="w-full h-full object-cover bg-white rounded cursor-pointer"
+                                    className="w-full h-full object-contain bg-gray-50 rounded cursor-pointer"
                                     onClick={() => openModal(url)}
                                 />
                                 <div
@@ -243,7 +244,7 @@ const ProductoDetalle = () => {
                 {/* Detalles - Orden reorganizado */}
                 <div className="py-4 mb-4">
                     <h2 className="text-xl mb-2 text-left">{producto.titulo}</h2>
-                    
+
                     {/* Precio y Material reorganizados */}
                     <div className="flex justify-between items-center mb-4">
                         {producto.precio && (
@@ -259,7 +260,7 @@ const ProductoDetalle = () => {
                             <p className="text-lg">{producto.material_principal}</p>
                         </div>
                     </div>
-                    
+
                     {/* Botones de consulta y compartir */}
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
                         <a
@@ -274,7 +275,7 @@ const ProductoDetalle = () => {
                             Consultar producto
                             <img src={iconoCompartir} alt="WhatsApp" className="w-8 h-8 ml-1" />
                         </a>
-                        
+
                         {/* Enlace de compartir en WhatsApp - Sutil y elegante */}
                         <a
                             href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
@@ -286,7 +287,7 @@ const ProductoDetalle = () => {
                             Compartir producto
                         </a>
                     </div>
-                    
+
                     {/* Información adicional con enlace a políticas de envío */}
                     <div className="text-left mb-4">
                         <span className="text-gray-600">Información adicional:</span>
@@ -294,9 +295,9 @@ const ProductoDetalle = () => {
                             "El precio no incluye IGV. Para más detalles sobre tallas o disponibilidad, por favor, contáctame por WhatsApp.
                         </p>
                         <p className="mt-2">
-                           <Link to="/PoliticasEnvios" className="text-blue-600 hover:underline font-semibold">
+                            <Link to="/PoliticasEnvios" className="text-blue-600 hover:underline font-semibold">
                                 Más detalles de envío
-                           </Link> o consulta el producto en el enlace de arriba.
+                            </Link> o consulta el producto en el enlace de arriba.
                         </p>
                     </div>
 
@@ -333,7 +334,7 @@ const ProductoDetalle = () => {
                             ))
                         ) : (
                             <p className="text-center text-gray-500">
-                                No hay productos novedosos para mostrar.
+                                No hay productos relacionados para mostrar.
                             </p>
                         )}
                     </div>

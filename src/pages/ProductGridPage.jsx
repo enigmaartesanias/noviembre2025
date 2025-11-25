@@ -214,7 +214,7 @@ const ProductGridPage = () => {
     return (
         <div className="container mx-auto px-4 py-8 pt-24">
             <div className="flex justify-between items-center mb-2">
-                <h1 className="text-2xl md:text-3xl font-bold">{pageTitle}</h1>
+                <h1 className="text-lg md:text-3xl font-bold">{pageTitle}</h1>
                 <select
                     onChange={handleSortChange}
                     value={sortOrder}
@@ -233,15 +233,19 @@ const ProductGridPage = () => {
                         <Link to={`/producto/${product.id}`} key={product.id} className="group block h-full">
                             <div className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
                                 {/* Componente de imagen para la carga gradual */}
-                                <ProductImage
-                                    src={product.imagen_principal_url}
-                                    alt={product.titulo}
-                                />
+                                <div className="h-40 sm:h-56 overflow-hidden">
+                                    <ProductImage
+                                        src={product.imagen_principal_url}
+                                        alt={product.titulo}
+                                    />
+                                </div>
 
                                 <div className="p-4 flex flex-col flex-grow">
-                                    <h3 className="text-sm md:text-base font-semibold truncate text-black">{product.titulo}</h3>
-                                    {product.precio && (
+                                    <h3 className="text-xs md:text-base font-semibold truncate text-black">{product.titulo}</h3>
+                                    {product.precio ? (
                                         <p className="text-sm md:text-lg font-normal text-black mt-2">S/ {product.precio.toFixed(2)}</p>
+                                    ) : (
+                                        <p className="text-sm md:text-lg font-normal text-gray-500 mt-2 italic">A pedido</p>
                                     )}
                                 </div>
                             </div>

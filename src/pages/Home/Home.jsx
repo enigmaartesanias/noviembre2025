@@ -19,7 +19,9 @@ const Home = () => {
         {/* BOTÓN DE PRUEBA AÑADIDO AQUÍ */}
 
 
-        <SimpleImageHero />
+        <div className="md:hidden">
+          <SimpleImageHero />
+        </div>
         <CategoriaShowcase />
 
         <Galeria />

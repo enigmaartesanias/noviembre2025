@@ -12,11 +12,11 @@ const ProductGrid = ({ productos, onImageClick }) => {
                     <img
                         src={producto.url_imagen}
                         alt={producto.nombre_producto}
-                        className="w-full h-48 object-cover cursor-pointer"
+                        className="w-full h-40 sm:h-48 object-cover cursor-pointer"
                         onClick={() => onImageClick(producto.url_imagen)}
                     />
                     <div className="p-2 sm:p-4 text-center">
-                        <h2 className="text-sm sm:text-lg font-semibold mb-1 truncate">{producto.nombre_producto}</h2>
+                        <h2 className="text-xs sm:text-base font-semibold mb-1 truncate">{producto.nombre_producto}</h2>
                         <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">{producto.categoria}</p>
                         <span className="text-sm sm:text-lg font-bold text-gray-800">S/ {producto.precio}.00</span>
                     </div>

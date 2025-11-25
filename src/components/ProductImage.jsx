@@ -5,7 +5,7 @@ const ProductImage = ({ src, alt }) => {
         <img
             src={src}
             alt={alt}
-            className="w-full h-64 object-cover"
+            className="w-full h-full object-contain bg-gray-50"
             loading="lazy"
         />
     );

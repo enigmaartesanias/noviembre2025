@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUploader from './ImageUploader';
+import { generateSlug } from '../utils';
 import { FaEdit, FaTrash, FaSearch, FaPlus, FaFilter, FaCheck, FaTimes, FaStar } from 'react-icons/fa';
 
 const ProductosAdmin = () => {
@@ -144,10 +145,22 @@ const ProductosAdmin = () => {
 
         try {
             // Extraer material_id y preparar datos del producto
-            const { material_id, ...productData } = formData;
+            // También excluimos campos que vienen de joins (categorias, producto_material) para evitar errores en el update
+            const { material_id, categorias, producto_material, ...productData } = formData;
+
+            // Generar slug si no existe
+            let slug = formData.slug;
+            if (!slug || slug.trim() === '') {
+                // Usar timestamp para garantizar unicidad absoluta
+                const timestamp = Date.now();
+                slug = generateSlug(formData.titulo) + '-' + timestamp;
+            }
+
+            console.log('Enviando producto con slug:', slug); // Debug logging
 
             const formDataToSend = {
                 ...productData,
+                slug: slug,
                 precio: formData.precio !== '' ? parseFloat(formData.precio) : null
             };
 
@@ -381,6 +394,19 @@ const ProductosAdmin = () => {
                                     className="w-full p-2 text-sm border rounded focus:ring-2 focus:ring-blue-500"
                                     required
                                 />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-bold mb-1 text-gray-600">Slug (URL amigable)</label>
+                                <input
+                                    type="text"
+                                    name="slug"
+                                    value={formData.slug}
+                                    onChange={handleInputChange}
+                                    className="w-full p-2 text-sm border rounded focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                                    placeholder="Se generará automáticamente si se deja vacío"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Identificador único para la URL del producto.</p>
                             </div>
 
                             <div className="md:col-span-3">
