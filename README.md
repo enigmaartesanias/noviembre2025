@@ -1,12 +1,69 @@
-# React + Vite
+# Enigma Artesanías - Web 2025
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sitio web de Enigma Artesanías, tienda de joyería artesanal en plata, alpaca y cobre.
 
-Currently, two official plugins are available:
+## 🚀 Deploy
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Este proyecto está configurado para deploy automático en Netlify. Cada push a la rama `main` dispara un nuevo deploy.
 
-## Expanding the ESLint configuration
+**📖 [Ver Guía Completa de Deploy](./DEPLOY.md)**
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠️ Tecnologías
+
+- **Frontend**: React 19 + Vite
+- **Estilos**: Tailwind CSS
+- **Base de datos**: Supabase
+- **Hosting**: Netlify
+- **Node.js**: 20.x
+
+## 💻 Desarrollo Local
+
+```bash
+# Instalar dependencias
+npm install
+
+# Ejecutar en modo desarrollo
+npm run dev
+
+# Build para producción
+npm run build
+
+# Preview del build
+npm preview
+```
+
+## 🌐 URLs
+
+- **Producción**: https://enigmajewelry.netlify.app
+- **Repositorio**: https://github.com/enigmaartesanias/noviembre2025
+
+## 📝 Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto:
+
+```env
+VITE_SUPABASE_URL=tu-url-de-supabase
+VITE_SUPABASE_ANON_KEY=tu-clave-anonima
+```
+
+## 📦 Estructura del Proyecto
+
+```
+src/
+├── components/     # Componentes reutilizables
+├── pages/         # Páginas de la aplicación
+├── utils.js       # Utilidades y helpers
+└── App.jsx        # Componente principal
+```
+
+## 🤝 Contribuir
+
+Para hacer cambios al proyecto:
+
+1. Asegúrate de estar en la rama `main`
+2. Haz tus cambios
+3. Commit y push a `main`
+4. Netlify hará el deploy automáticamente
+
+Ver [DEPLOY.md](./DEPLOY.md) para más detalles.
+
