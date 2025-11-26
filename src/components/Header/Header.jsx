@@ -142,11 +142,11 @@ const Header = () => {
                         </button>
                     )}
 
-                    <ul className="flex flex-col md:flex-row md:space-x-6 md:items-center px-4 pb-4 md:pb-0 pt-4 h-full overflow-y-auto md:h-auto md:overflow-visible text-left">
+                    <ul className="flex flex-col md:flex-row md:space-x-6 md:items-center px-2 pb-4 md:pb-0 pt-2 md:pt-0 h-full overflow-y-auto md:h-auto md:overflow-visible text-left">
                         <li>
                             <Link
                                 to="/sobremi"
-                                className="block px-4 py-2 hover:text-gray-500"
+                                className="block px-4 py-3 md:py-2 hover:text-gray-500 font-medium"
                                 onClick={() => {
                                     if (window.innerWidth < 768) toggleMenu();
                                     setActiveDropdown(null);
@@ -159,25 +159,25 @@ const Header = () => {
                         {materials.map((material) => (
                             <li key={material} className="group has-submenu md:relative">
                                 <button
-                                    className="flex items-center justify-between w-full px-4 py-2 hover:text-gray-500 text-left md:inline md:w-auto"
+                                    className="flex items-center justify-between w-full px-4 py-3 md:py-2 hover:text-gray-500 text-left md:inline md:w-auto font-medium"
                                     onClick={() => toggleDropdown(material)}
                                 >
                                     {material}
-                                    <span className="ml-2 md:hidden">
+                                    <span className="ml-auto md:hidden text-sm">
                                         {activeDropdown === material ? 'v' : '>'}
                                     </span>
                                 </button>
                                 <ul
                                     className={`${activeDropdown === material
-                                            ? 'block md:absolute bg-gray-200 md:min-w-[160px] md:mt-2 shadow-lg z-50'
-                                            : 'hidden'
-                                        }`}
+                                        ? 'block bg-gray-100 md:bg-white md:absolute md:min-w-[160px] md:mt-2 md:shadow-lg md:border md:border-gray-200 z-50'
+                                        : 'hidden'
+                                        } md:group-hover:block`}
                                 >
                                     {jewelryByMaterial[material].map((jewelry) => (
                                         <li key={`${material}-${jewelry.name}`}>
                                             <Link
                                                 to={jewelry.path}
-                                                className="block px-4 py-2 hover:bg-gray-200"
+                                                className="block px-6 md:px-4 py-2 hover:bg-gray-200 text-sm md:text-base"
                                                 onClick={() => {
                                                     setActiveDropdown(null);
                                                     if (window.innerWidth < 768) toggleMenu();
@@ -194,7 +194,7 @@ const Header = () => {
                         <li>
                             <Link
                                 to="/catalogo/all/PERSONALIZADO"
-                                className="block px-4 py-2 hover:text-gray-500"
+                                className="block px-4 py-3 md:py-2 hover:text-gray-500 font-medium"
                                 onClick={() => {
                                     if (window.innerWidth < 768) toggleMenu();
                                     setActiveDropdown(null);
@@ -207,7 +207,7 @@ const Header = () => {
                         <li>
                             <Link
                                 to="/videoshorts"
-                                className="gap-2 block px-4 py-2 hover:text-gray-500 justify-center md:justify-start"
+                                className="gap-2 block px-4 py-3 md:py-2 hover:text-gray-500 justify-center md:justify-start font-medium"
                                 onClick={() => {
                                     if (window.innerWidth < 768) toggleMenu();
                                     setActiveDropdown(null);
@@ -225,7 +225,7 @@ const Header = () => {
                         <li>
                             <Link
                                 to="/contacto"
-                                className="block px-4 py-2 hover:text-gray-500"
+                                className="block px-4 py-3 md:py-2 hover:text-gray-500 font-medium"
                                 onClick={() => {
                                     if (window.innerWidth < 768) toggleMenu();
                                     setActiveDropdown(null);
