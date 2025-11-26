@@ -186,7 +186,7 @@ const ProductoDetalle = () => {
     const shareText = `¡Mira este producto! ${producto.titulo}\n${window.location.href}`;
 
     return (
-        <main className="pt-24 pb-12 bg-gray-50 min-h-screen">
+        <main className="pt-20 pb-12 bg-gray-50 min-h-screen">
             {/* Breadcrumb para volver a inicio */}
             <div className="container mx-auto px-8 max-w-3xl">
                 <Link to="/" className="text-xm text-black-500 hover:underline">
@@ -194,7 +194,7 @@ const ProductoDetalle = () => {
                 </Link>
             </div>
 
-            <div className="container mx-auto p-8 max-w-3xl bg-white shadow-xl rounded-lg" >
+            <div className="container mx-auto p-4 max-w-3xl bg-white shadow-xl rounded-lg">
                 {/* Galería */}
                 <div className="mb-6 producto-detalle-galeria">
                     <Slider {...settings} ref={slider => (sliderRef = slider)}>
@@ -264,7 +264,7 @@ const ProductoDetalle = () => {
                     {/* Botones de consulta y compartir */}
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
                         <a
-                            href={`https://wa.me/51960282376?text= ${encodeURIComponent(
+                            href={`https://wa.me/51960282376?text=${encodeURIComponent(
                                 `Estoy interesado(a) en el siguiente producto: ${producto.titulo}\n${window.location.origin}/producto/${producto.id}`
                             )}`}
                             target="_blank"
@@ -288,6 +288,14 @@ const ProductoDetalle = () => {
                         </a>
                     </div>
 
+                    {/* Descripción */}
+                    {producto.descripcion && (
+                        <div className="py-4 text-left mb-2">
+                            <span className="text-gray-600">Descripción:</span>
+                            <p>{producto.descripcion}</p>
+                        </div>
+                    )}
+
                     {/* Información adicional con enlace a políticas de envío */}
                     <div className="text-left mb-4">
                         <span className="text-gray-600">Información adicional:</span>
@@ -300,14 +308,6 @@ const ProductoDetalle = () => {
                             </Link> o consulta el producto en el enlace de arriba.
                         </p>
                     </div>
-
-                    {/* Descripción */}
-                    {producto.descripcion && (
-                        <div className="py-4 text-left mb-2">
-                            <span className="text-gray-600">Descripción:</span>
-                            <p>{producto.descripcion}</p>
-                        </div>
-                    )}
                 </div>
 
                 {/* Productos relacionados */}

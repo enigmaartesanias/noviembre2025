@@ -4,7 +4,7 @@ import video from '../../assets/images/video.mp4';
 
 const SimpleImageHero = () => {
   return (
-    <div className="w-full flex justify-center bg-gray-100">
+    <div className="w-full flex justify-center bg-gray-100 mt-2">
       <div
         className="relative w-full container mx-auto px-3 flex items-center justify-center overflow-hidden"
         style={{ minHeight: '25vh' }} // Altura para móvil

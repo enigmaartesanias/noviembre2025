@@ -10,6 +10,7 @@ import Contacto from './pages/Contacto/Contacto';
 import PoliticasEnvios from './pages/PoliticasEnvios/PoliticasEnvios';
 import ShippingPolicies from './pages/ShippingPolicies/ShippingPolicies';
 import VideoShorts from './pages/VideoShorts';
+import ElTaller from './pages/ElTaller/ElTaller';
 
 // Importamos ProductGridPage (maneja el catálogo dinámico)
 import ProductGridPage from './pages/ProductGridPage';
@@ -48,6 +49,7 @@ function App() {
                     <Route path="/politicasenvios" element={<PoliticasEnvios />} />
                     <Route path="/shippingpolicies" element={<ShippingPolicies />} />
                     <Route path="/videoshorts" element={<VideoShorts />} />
+                    <Route path="/el-taller" element={<ElTaller />} />
                     <Route path="/carrusel" element={<PublicCarousel />} />
                     <Route path="/producto/:id" element={<ProductoDetalle />} />
                     <Route path="/tienda" element={<Tienda />} />

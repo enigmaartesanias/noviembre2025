@@ -113,11 +113,11 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
                 </div>
 
                 {/* Enlaces debajo de la imagen (solo en móvil) */}
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <div className="mt-4 grid grid-cols-2 gap-2 justify-center">
                     {isCustom ? (
                         <Link
                             to={link}
-                            className="px-6 py-2 bg-gray-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-full shadow-md transition-colors duration-300 no-underline uppercase"
+                            className="px-6 py-2 bg-gray-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-full shadow-md transition-colors duration-300 no-underline uppercase col-span-2 text-center"
                         >
                             Ver Modelos
                         </Link>
@@ -126,7 +126,7 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
                             <Link
                                 key={cat.slug}
                                 to={getRoute(key, cat.slug)}
-                                className="px-4 py-1.5 text-xs font-bold text-white bg-gray-700 hover:bg-gray-900 rounded-full border border-gray-600 shadow-md transition-colors duration-300 no-underline uppercase"
+                                className="px-4 py-1.5 text-xs font-bold text-white bg-gray-700 hover:bg-gray-900 rounded-full border border-gray-600 shadow-md transition-colors duration-300 no-underline uppercase text-center"
                             >
                                 {cat.name}
                             </Link>

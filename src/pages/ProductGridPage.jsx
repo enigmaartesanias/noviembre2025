@@ -213,6 +213,11 @@ const ProductGridPage = () => {
 
     return (
         <div className="container mx-auto px-4 py-8 pt-24">
+            <div className="mb-6 px-1">
+                <Link to="/" className="text-sm text-gray-500 hover:underline">
+                    &lt; Inicio
+                </Link>
+            </div>
             <div className="flex justify-between items-center mb-2">
                 <h1 className="text-lg md:text-3xl font-bold">{pageTitle}</h1>
                 <select
@@ -228,7 +233,7 @@ const ProductGridPage = () => {
             <p className="text-gray-600 mb-8">Explora nuestra colección.</p>
 
             {sortedProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {sortedProducts.map((product) => (
                         <Link to={`/producto/${product.id}`} key={product.id} className="group block h-full">
                             <div className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
