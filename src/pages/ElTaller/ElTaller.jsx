@@ -14,12 +14,7 @@ const ElTaller = () => {
                         <p className="text-xl md:text-2xl text-gray-300 mb-8">
                             Más de 20 años forjando historias únicas en metal y piedra
                         </p>
-                        <Link
-                            to="/contacto"
-                            className="inline-block bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-                        >
-                            Solicitar Pieza Personalizada
-                        </Link>
+
                     </div>
                 </div>
             </section>
@@ -46,13 +41,13 @@ const ElTaller = () => {
                         </h2>
                         <div className="prose prose-lg max-w-none">
                             <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                                [TEXTO DE EJEMPLO - EDITAR] Desde hace más de 20 años, mi pasión por la orfebrería ha sido el motor que impulsa cada creación. En Enigma Artesanías, no fabricamos joyas en serie; cada pieza es una obra única, nacida de la inspiración del momento y del diálogo con los materiales nobles.
+                                Desde hace más de 20 años, mi pasión por la orfebrería ha sido el motor que impulsa cada creación. En Enigma Artesanías, no fabricamos joyas en serie; cada pieza es una obra única, nacida de la inspiración del momento y del diálogo con los materiales nobles.
                             </p>
                             <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                                [TEXTO DE EJEMPLO - EDITAR] Mi filosofía es simple: crear piezas que cuenten historias. Trabajando solo en mi taller, controlo cada etapa del proceso, desde el diseño inicial hasta el acabado final. Esta dedicación artesanal garantiza que cada cliente reciba una joya verdaderamente especial.
+                                Mi filosofía es simple: crear piezas que cuenten historias. Trabajando solo en mi taller, controlo cada etapa del proceso, desde el diseño inicial hasta el acabado final. Esta dedicación artesanal garantiza que cada cliente reciba una joya verdaderamente especial.
                             </p>
                             <p className="text-lg text-gray-700 leading-relaxed">
-                                [TEXTO DE EJEMPLO - EDITAR] Como artista orfebre, mi compromiso es con la excelencia y la autenticidad. Cada martillazo, cada soldadura, cada engaste es una expresión de mi amor por este arte ancestral.
+                                Como artista orfebre, mi compromiso es con la excelencia y la autenticidad. Cada martillazo, cada soldadura, cada engaste es una expresión de mi amor por este arte ancestral.
                             </p>
                         </div>
                     </div>
@@ -74,7 +69,7 @@ const ElTaller = () => {
                                     Alambrismo y Filigrana
                                 </h3>
                                 <p className="text-gray-700">
-                                    [TEXTO DE EJEMPLO - EDITAR] Técnica ancestral que requiere paciencia y precisión. Cada hilo de metal es trabajado a mano para crear patrones únicos y delicados.
+                                    Técnica ancestral que requiere paciencia y precisión. Cada hilo de metal es trabajado a mano para crear patrones únicos y delicados.
                                 </p>
                             </div>
 
@@ -84,7 +79,7 @@ const ElTaller = () => {
                                     Martillado y Texturizado
                                 </h3>
                                 <p className="text-gray-700">
-                                    [TEXTO DE EJEMPLO - EDITAR] Golpe a golpe, creo texturas únicas que dan carácter y profundidad a cada pieza. El martillado es un arte que domino tras años de práctica.
+                                    Golpe a golpe, creo texturas únicas que dan carácter y profundidad a cada pieza. El martillado es un arte que domino tras años de práctica.
                                 </p>
                             </div>
 
@@ -94,7 +89,7 @@ const ElTaller = () => {
                                     Soldadura Experta
                                 </h3>
                                 <p className="text-gray-700">
-                                    [TEXTO DE EJEMPLO - EDITAR] La soldadura es el corazón de la orfebrería. Cada unión es invisible pero resistente, garantizando la durabilidad de la pieza.
+                                    La soldadura es el corazón de la orfebrería. Cada unión es invisible pero resistente, garantizando la durabilidad de la pieza.
                                 </p>
                             </div>
 
@@ -104,7 +99,7 @@ const ElTaller = () => {
                                     Engaste de Piedras
                                 </h3>
                                 <p className="text-gray-700">
-                                    [TEXTO DE EJEMPLO - EDITAR] Trabajo con cuarzos, piedras naturales y resinas, creando engastes que realzan la belleza de cada gema y la integran perfectamente en el diseño.
+                                    Trabajo con cuarzos, piedras naturales y resinas, creando engastes que realzan la belleza de cada gema y la integran perfectamente en el diseño.
                                 </p>
                             </div>
 
@@ -114,7 +109,7 @@ const ElTaller = () => {
                                     Acabados Envejecidos
                                 </h3>
                                 <p className="text-gray-700">
-                                    [TEXTO DE EJEMPLO - EDITAR] Los acabados oxidados y envejecidos aportan profundidad y misterio a las piezas, creando un contraste visual único.
+                                    Los acabados oxidados y envejecidos aportan profundidad y misterio a las piezas, creando un contraste visual único.
                                 </p>
                             </div>
 
@@ -124,7 +119,7 @@ const ElTaller = () => {
                                     Diseños Personalizados
                                 </h3>
                                 <p className="text-gray-700">
-                                    [TEXTO DE EJEMPLO - EDITAR] Cada cliente tiene una historia. Trabajo en colaboración para crear piezas que reflejen su personalidad y estilo único.
+                                    Cada cliente tiene una historia. Trabajo en colaboración para crear piezas que reflejen su personalidad y estilo único.
                                 </p>
                             </div>
                         </div>
@@ -143,36 +138,36 @@ const ElTaller = () => {
                         <div className="grid md:grid-cols-2 gap-12">
                             {/* Metales */}
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
                                     Metales Nobles
                                 </h3>
                                 <ul className="space-y-4">
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Plata 950:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] La plata de ley es mi material principal, conocida por su brillo y maleabilidad.</p>
+                                            <p className="text-gray-700">La plata de ley es mi material principal, conocida por su brillo y maleabilidad.</p>
                                         </div>
                                     </li>
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Cobre:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] El cobre aporta calidez y un color rojizo único a las creaciones.</p>
+                                            <p className="text-gray-700">El cobre aporta calidez y un color rojizo único a las creaciones.</p>
                                         </div>
                                     </li>
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Alpaca:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] Aleación versátil que permite crear piezas accesibles sin sacrificar calidad.</p>
+                                            <p className="text-gray-700">Aleación versátil que permite crear piezas accesibles sin sacrificar calidad.</p>
                                         </div>
                                     </li>
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Bronce:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] Material ancestral que aporta un carácter único y atemporal.</p>
+                                            <p className="text-gray-700">Material ancestral que aporta un carácter único y atemporal.</p>
                                         </div>
                                     </li>
                                 </ul>
@@ -180,36 +175,36 @@ const ElTaller = () => {
 
                             {/* Piedras y Elementos */}
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
                                     Piedras y Elementos Naturales
                                 </h3>
                                 <ul className="space-y-4">
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Cuarzos:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] Cristales naturales que aportan energía y belleza a cada pieza.</p>
+                                            <p className="text-gray-700">Cristales naturales que aportan energía y belleza a cada pieza.</p>
                                         </div>
                                     </li>
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Piedras Naturales:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] Amatistas, ópalos, turquesas y más, cada una seleccionada cuidadosamente.</p>
+                                            <p className="text-gray-700">Amatistas, ópalos, turquesas y más, cada una seleccionada cuidadosamente.</p>
                                         </div>
                                     </li>
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Resinas:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] Materiales modernos que permiten crear efectos únicos de color y transparencia.</p>
+                                            <p className="text-gray-700">Materiales modernos que permiten crear efectos únicos de color y transparencia.</p>
                                         </div>
                                     </li>
-                                    <li className="flex items-start">
-                                        <span className="text-2xl mr-3">✦</span>
+                                    <li className="flex flex-col items-center text-center">
+                                        <span className="text-2xl mb-2">✦</span>
                                         <div>
                                             <strong className="text-gray-900">Nácar:</strong>
-                                            <p className="text-gray-700">[TEXTO DE EJEMPLO - EDITAR] Elemento orgánico que aporta iridiscencia y elegancia natural.</p>
+                                            <p className="text-gray-700">Elemento orgánico que aporta iridiscencia y elegancia natural.</p>
                                         </div>
                                     </li>
                                 </ul>

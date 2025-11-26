@@ -45,11 +45,11 @@ const CelebrityCollaboration = () => {
                         </h2>
 
                         <p className="text-lg md:text-xl text-gray-300 mb-6 leading-relaxed">
-                            [TEXTO EDITABLE] Desde 2021, tengo el honor de crear piezas únicas para <strong className="text-white">Andru Donalds</strong>, voz principal del legendario proyecto musical <strong className="text-yellow-400">ENIGMA</strong>.
+                            Desde 2021, tengo el honor de crear piezas únicas para <strong className="text-white">Andru Donalds</strong>, voz principal del legendario proyecto musical <strong className="text-yellow-400">ENIGMA</strong>.
                         </p>
 
                         <p className="text-base md:text-lg text-gray-400 mb-8 leading-relaxed">
-                            [TEXTO EDITABLE] Una conexión que inspiró el nombre de mi taller y que representa mi compromiso con la excelencia artesanal. Cada pieza es diseñada exclusivamente para reflejar su estilo único: anillos con piedras naturales, cuarzos y dijes que combinan fuerza y elegancia.
+                            Una conexión que inspiró el nombre de mi taller y que representa mi compromiso con la excelencia artesanal. Cada pieza es diseñada exclusivamente para reflejar su estilo único: anillos con piedras naturales, cuarzos y dijes que combinan fuerza y elegancia.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">

@@ -12,7 +12,7 @@ const SocialProof = () => {
         },
         {
             platform: 'TikTok',
-            followers: '12.2k',
+            followers: '2k',
             icon: FaTiktok,
             url: 'https://www.tiktok.com/@artesaniasenigma',
             color: 'from-gray-900 to-gray-700',
@@ -46,7 +46,7 @@ const SocialProof = () => {
                         Únete a Nuestra Comunidad
                     </h2>
                     <p className="text-base md:text-lg text-gray-600">
-                        Más de <span className="font-bold text-gray-900">47,000 seguidores</span> confían en nuestro arte
+                        Más de <span className="font-bold text-gray-900">37,000 seguidores</span> confían en nuestro arte
                     </p>
                 </div>
 

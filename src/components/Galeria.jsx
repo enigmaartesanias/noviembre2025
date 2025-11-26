@@ -40,7 +40,12 @@ const MATERIAL_CARDS = [
         name: "Colección Plata",
         key: "plata",
         description: DEFAULT_SUBTITLE,
-        imageSrc: "/images/anillo2.jpg",
+        images: [
+            "/images/anillo2.jpg",
+            "/images/aretes.jpg",
+            "/images/collares.jpg",
+            "/images/pulseras.jpg"
+        ],
         categories: CATEGORIES,
         isCustom: false,
     },
@@ -48,7 +53,11 @@ const MATERIAL_CARDS = [
         name: "Colección Alpaca",
         key: "alpaca",
         description: DEFAULT_SUBTITLE,
-        imageSrc: "/images/collar23.jpg",
+        images: [
+            "/images/collar23.jpg",
+            "/images/img1.jpg",
+            "/images/img2.jpg"
+        ],
         categories: CATEGORIES,
         isCustom: false,
     },
@@ -56,7 +65,11 @@ const MATERIAL_CARDS = [
         name: "Colección Cobre",
         key: "cobre",
         description: DEFAULT_SUBTITLE,
-        imageSrc: "/images/pulsera3.jpg",
+        images: [
+            "/images/pulsera3.jpg",
+            "/images/img3.jpg",
+            "/images/img4.jpg"
+        ],
         categories: CATEGORIES,
         isCustom: false,
     },
@@ -64,19 +77,63 @@ const MATERIAL_CARDS = [
         name: "Diseños Personalizados",
         key: "custom",
         description: DEFAULT_SUBTITLE,
-        imageSrc: "/images/per10.jpg",
+        images: [
+            "/images/per10.jpg",
+            "/images/img5.jpg",
+            "/images/3.jpg"
+        ],
         link: "/catalogo/all/PERSONALIZADO",
         isCustom: true,
     },
 ];
 
 // ==========================================
-// 2. COMPONENTE DE TARJETA INDIVIDUAL
+// 2. COMPONENTE SLIDESHOW
+// ==========================================
+
+const Slideshow = ({ images, alt }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+        }, 4000); // Cambia cada 4 segundos
+
+        return () => clearInterval(interval);
+    }, [images.length]);
+
+    return (
+        <div className="relative w-full h-full">
+            {images.map((img, index) => (
+                <div
+                    key={img}
+                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? "opacity-100" : "opacity-0"
+                        }`}
+                >
+                    <img
+                        src={img}
+                        alt={`${alt} - ${index + 1}`}
+                        className="w-full h-full object-cover brightness-50 contrast-150 saturate-75"
+                        onError={(e) => {
+                            console.error("Imagen no cargó:", img);
+                            e.target.src = "https://placehold.co/600x600?text=No+Image";
+                        }}
+                    />
+                </div>
+            ))}
+        </div>
+    );
+};
+
+// ==========================================
+// 3. COMPONENTE DE TARJETA INDIVIDUAL
 // ==========================================
 
 const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const { name, description, imageSrc, key, categories, link, isCustom } = card;
+    const { name, description, images, key, categories, link, isCustom } = card;
 
     const getRoute = (materialKey, categorySlug) => {
         return BASE_ROUTES[materialKey]?.[categorySlug] || "#";
@@ -99,17 +156,9 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
     if (isMobile) {
         return (
             <div className="w-full relative overflow-hidden rounded-xl transition-shadow duration-300 cursor-pointer">
-                {/* Imagen */}
+                {/* Imagen / Slideshow */}
                 <div className="relative w-full h-80">
-                    <img
-                        src={imageSrc}
-                        alt={name}
-                        className="w-full h-full object-cover brightness-50 contrast-150 saturate-75"
-                        onError={(e) => {
-                            console.error("Imagen no cargó:", imageSrc);
-                            e.target.src = "https://placehold.co/600x600?text=No+Image";
-                        }}
-                    />
+                    <Slideshow images={images} alt={name} />
                 </div>
 
                 {/* Enlaces debajo de la imagen (solo en móvil) */}
@@ -151,17 +200,9 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
             }}
             style={{ zIndex: 1 }}
         >
-            {/* Contenedor de la Imagen */}
+            {/* Contenedor de la Imagen / Slideshow */}
             <div className="relative w-full h-80">
-                <img
-                    src={imageSrc}
-                    alt={name}
-                    className="w-full h-full object-cover brightness-50 contrast-150 saturate-75"
-                    onError={(e) => {
-                        console.error("Imagen no cargó:", imageSrc);
-                        e.target.src = "https://placehold.co/600x600?text=No+Image";
-                    }}
-                />
+                <Slideshow images={images} alt={name} />
 
                 {/* Fondo base oscuro siempre presente */}
                 <div className="absolute inset-0 bg-black/60 pointer-events-none" />
@@ -231,7 +272,7 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
 };
 
 // ==========================================
-// 3. COMPONENTE PRINCIPAL (GALERIA)
+// 4. COMPONENTE PRINCIPAL (GALERIA)
 // ==========================================
 
 const Galeria = () => {
