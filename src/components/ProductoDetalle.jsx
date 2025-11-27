@@ -187,10 +187,13 @@ const ProductoDetalle = () => {
 
     return (
         <main className="pt-20 pb-12 bg-gray-50 min-h-screen">
-            {/* Breadcrumb para volver a inicio */}
-            <div className="container mx-auto px-8 max-w-3xl">
-                <Link to="/" className="text-xm text-black-500 hover:underline">
+            {/* Navegación: Inicio y Catálogo */}
+            <div className="container mx-auto px-8 max-w-3xl flex justify-between items-center">
+                <Link to="/" className="text-sm text-gray-600 hover:text-black hover:underline transition-colors">
                     &lt; Inicio
+                </Link>
+                <Link to="/catalogo/all/all" className="text-sm text-gray-600 hover:text-black hover:underline transition-colors">
+                    Ver Catálogo &gt;
                 </Link>
             </div>
 

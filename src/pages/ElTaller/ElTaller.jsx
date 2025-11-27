@@ -221,7 +221,7 @@ const ElTaller = () => {
                         ¿Listo para tu pieza única?
                     </h2>
                     <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                        [TEXTO DE EJEMPLO - EDITAR] Cada joya cuenta una historia. Déjame crear la tuya.
+                        Cada joya cuenta una historia. Déjame crear la tuya.
                     </p>
                     <Link
                         to="/contacto"

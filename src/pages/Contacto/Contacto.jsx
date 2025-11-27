@@ -27,7 +27,7 @@ const Contacto = () => {
           <p className="text-gray-600 text-center">
             Dirección: Jr. Madre Selva 544 Tda. 02 - Urb. Santa Isabel - Carabayllo<br />
             Lima - Perú<br />
-            Whatsapp: +51 960282376<br />
+            Whatsapp: <a href="https://wa.me/51960282376" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">+51 960282376</a><br />
             Email: artesaniasenigma@gmail.com
           </p>
         </div>
