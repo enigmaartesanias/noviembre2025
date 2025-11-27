@@ -161,10 +161,12 @@ const ProductGridPage = () => {
     // Lógica para ordenar los productos
     const sortedProducts = [...products].sort((a, b) => {
         switch (sortOrder) {
-            case 'price_asc':
-                return a.precio - b.precio;
-            case 'price_desc':
-                return b.precio - a.precio;
+            case 'oldest':
+                return new Date(a.created_at) - new Date(b.created_at);
+            case 'name_asc':
+                return a.titulo.localeCompare(b.titulo);
+            case 'name_desc':
+                return b.titulo.localeCompare(a.titulo);
             default:
                 // Por defecto: ordenar por fecha de creación descendente (más nuevos primero)
                 return new Date(b.created_at) - new Date(a.created_at);
@@ -225,9 +227,10 @@ const ProductGridPage = () => {
                     value={sortOrder}
                     className="p-1 text-sm border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                    <option value="default">Ordenar por</option>
-                    <option value="price_asc">Precio: Menor a Mayor</option>
-                    <option value="price_desc">Precio: Mayor a Menor</option>
+                    <option value="default">Más Nuevos</option>
+                    <option value="oldest">Más Antiguos</option>
+                    <option value="name_asc">Nombre (A-Z)</option>
+                    <option value="name_desc">Nombre (Z-A)</option>
                 </select>
             </div>
             <p className="text-gray-600 mb-8">Explora nuestra colección.</p>
