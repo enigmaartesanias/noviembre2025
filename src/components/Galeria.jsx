@@ -40,12 +40,10 @@ const MATERIAL_CARDS = [
         name: "Colección Plata",
         key: "plata",
         description: DEFAULT_SUBTITLE,
-        images: [
-            "/images/anillo2.jpg",
-            "/images/aretes.jpg",
-            "/images/collares.jpg",
-            "/images/pulseras.jpg"
-        ],
+        // ---------------------------------------------------------
+        // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN PLATA
+        // ---------------------------------------------------------
+        image: "/images/anillo2.jpg",
         categories: CATEGORIES,
         isCustom: false,
     },
@@ -53,11 +51,10 @@ const MATERIAL_CARDS = [
         name: "Colección Alpaca",
         key: "alpaca",
         description: DEFAULT_SUBTITLE,
-        images: [
-            "/images/collar23.jpg",
-            "/images/img1.jpg",
-            "/images/img2.jpg"
-        ],
+        // ---------------------------------------------------------
+        // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN ALPACA
+        // ---------------------------------------------------------
+        image: "/images/collar23.jpg",
         categories: CATEGORIES,
         isCustom: false,
     },
@@ -65,11 +62,10 @@ const MATERIAL_CARDS = [
         name: "Colección Cobre",
         key: "cobre",
         description: DEFAULT_SUBTITLE,
-        images: [
-            "/images/pulsera3.jpg",
-            "/images/img3.jpg",
-            "/images/img4.jpg"
-        ],
+        // ---------------------------------------------------------
+        // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN COBRE
+        // ---------------------------------------------------------
+        image: "/images/pulsera3.jpg",
         categories: CATEGORIES,
         isCustom: false,
     },
@@ -77,63 +73,22 @@ const MATERIAL_CARDS = [
         name: "Diseños Personalizados",
         key: "custom",
         description: DEFAULT_SUBTITLE,
-        images: [
-            "/images/per10.jpg",
-            "/images/img5.jpg",
-            "/images/3.jpg"
-        ],
+        // ---------------------------------------------------------
+        // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA PERSONALIZADOS
+        // ---------------------------------------------------------
+        image: "/images/per10.jpg",
         link: "/catalogo/all/PERSONALIZADO",
         isCustom: true,
     },
 ];
 
 // ==========================================
-// 2. COMPONENTE SLIDESHOW
-// ==========================================
-
-const Slideshow = ({ images, alt }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    useEffect(() => {
-        if (images.length <= 1) return;
-
-        const interval = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-        }, 4000); // Cambia cada 4 segundos
-
-        return () => clearInterval(interval);
-    }, [images.length]);
-
-    return (
-        <div className="relative w-full h-full">
-            {images.map((img, index) => (
-                <div
-                    key={img}
-                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? "opacity-100" : "opacity-0"
-                        }`}
-                >
-                    <img
-                        src={img}
-                        alt={`${alt} - ${index + 1}`}
-                        className="w-full h-full object-cover brightness-50 contrast-150 saturate-75"
-                        onError={(e) => {
-                            console.error("Imagen no cargó:", img);
-                            e.target.src = "https://placehold.co/600x600?text=No+Image";
-                        }}
-                    />
-                </div>
-            ))}
-        </div>
-    );
-};
-
-// ==========================================
-// 3. COMPONENTE DE TARJETA INDIVIDUAL
+// 2. COMPONENTE DE TARJETA INDIVIDUAL
 // ==========================================
 
 const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const { name, description, images, key, categories, link, isCustom } = card;
+    const { name, description, image, key, categories, link, isCustom } = card;
 
     const getRoute = (materialKey, categorySlug) => {
         return BASE_ROUTES[materialKey]?.[categorySlug] || "#";
@@ -156,9 +111,13 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
     if (isMobile) {
         return (
             <div className="w-full relative overflow-hidden rounded-xl transition-shadow duration-300 cursor-pointer">
-                {/* Imagen / Slideshow */}
+                {/* Imagen Estática */}
                 <div className="relative w-full h-80">
-                    <Slideshow images={images} alt={name} />
+                    <img
+                        src={image}
+                        alt={name}
+                        className="w-full h-full object-cover brightness-90 hover:brightness-100 transition-all duration-500"
+                    />
                 </div>
 
                 {/* Enlaces debajo de la imagen (solo en móvil) */}
@@ -200,12 +159,16 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
             }}
             style={{ zIndex: 1 }}
         >
-            {/* Contenedor de la Imagen / Slideshow */}
+            {/* Contenedor de la Imagen Estática */}
             <div className="relative w-full h-80">
-                <Slideshow images={images} alt={name} />
+                <img
+                    src={image}
+                    alt={name}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-in-out transform hover:scale-105"
+                />
 
                 {/* Fondo base oscuro siempre presente */}
-                <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+                <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
                 {/* Overlay de categorías (aparece al activar o hacer hover) */}
                 <div
@@ -227,7 +190,7 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
                             transition: "opacity 0.3s ease",
                             width: "100%",
                             height: "100%",
-                            padding: "1rem", // Reducido de 1.5rem a 1rem
+                            padding: "1rem",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
@@ -241,7 +204,7 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
                                 display: "flex",
                                 flexWrap: "wrap",
                                 justifyContent: "center",
-                                gap: "0.75rem", // Reducido de 1rem a 0.75rem
+                                gap: "0.75rem",
                             }}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -272,7 +235,7 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
 };
 
 // ==========================================
-// 4. COMPONENTE PRINCIPAL (GALERIA)
+// 3. COMPONENTE PRINCIPAL (GALERIA)
 // ==========================================
 
 const Galeria = () => {
@@ -288,7 +251,7 @@ const Galeria = () => {
 
     return (
         <section
-            className="py-8 bg-gray-100 font-sans" // 👈 Cambiado de py-12 a py-8
+            className="py-8 bg-gray-100 font-sans"
             onClick={() => setActiveCard(null)}
         >
             <div className="container mx-auto px-3">
@@ -302,16 +265,16 @@ const Galeria = () => {
                 </div>
 
                 {/* Flex row en desktop, column en móvil */}
-                <div className="flex flex-col gap-8 lg:flex-row lg:justify-between lg:gap-6"> {/* Agregado gap-8 para móvil */}
+                <div className="flex flex-col gap-8 lg:flex-row lg:justify-between lg:gap-6">
                     {MATERIAL_CARDS.map((card) => (
                         <div
                             key={card.key}
-                            className="flex flex-col bg-white p-4 rounded-xl shadow-xl transition-shadow duration-300 hover:shadow-2xl w-full lg:w-[23.5%]" // Ancho aumentado a 23.5%
+                            className="flex flex-col bg-white p-4 rounded-xl shadow-xl transition-shadow duration-300 hover:shadow-2xl w-full lg:w-[23.5%]"
                         >
                             <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 tracking-tight mb-1 text-center">
                                 {card.name}
                             </h3>
-                            <p className="text-xs sm:text-sm text-gray-600 mb-3 text-center"> {/* Reducido mb de 6 a 3 */}
+                            <p className="text-xs sm:text-sm text-gray-600 mb-3 text-center">
                                 {card.description}
                             </p>
 

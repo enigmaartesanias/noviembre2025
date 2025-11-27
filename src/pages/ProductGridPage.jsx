@@ -247,10 +247,8 @@ const ProductGridPage = () => {
 
                                 <div className="p-4 flex flex-col flex-grow">
                                     <h3 className="text-xs md:text-base font-semibold truncate text-black">{product.titulo}</h3>
-                                    {product.precio ? (
+                                    {product.precio && (
                                         <p className="text-sm md:text-lg font-normal text-black mt-2">S/ {product.precio.toFixed(2)}</p>
-                                    ) : (
-                                        <p className="text-sm md:text-lg font-normal text-gray-500 mt-2 italic">A pedido</p>
                                     )}
                                 </div>
                             </div>
