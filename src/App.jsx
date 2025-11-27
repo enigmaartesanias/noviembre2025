@@ -55,11 +55,7 @@ function App() {
                     <Route path="/tienda" element={<Tienda />} />
 
                     {/* Rutas dinámicas de ProductGridPage */}
-
-                    {/* Ver todo el catálogo activo */}
-                    <Route path="/catalogo/all/all" element={<ProductGridPage />} />
-
-                    {/* Filtrado dinámico por material y categoría */}
+                    {/* La ruta dinámica captura /catalogo/all/all correctamente */}
                     <Route path="/catalogo/:material/:categoria" element={<ProductGridPage />} />
 
                     {/* Rutas de autenticación */}
