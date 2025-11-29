@@ -163,10 +163,6 @@ const ProductGridPage = () => {
         switch (sortOrder) {
             case 'oldest':
                 return new Date(a.created_at) - new Date(b.created_at);
-            case 'name_asc':
-                return a.titulo.localeCompare(b.titulo);
-            case 'name_desc':
-                return b.titulo.localeCompare(a.titulo);
             default:
                 // Por defecto: ordenar por fecha de creación descendente (más nuevos primero)
                 return new Date(b.created_at) - new Date(a.created_at);
@@ -229,8 +225,6 @@ const ProductGridPage = () => {
                 >
                     <option value="default">Más Nuevos</option>
                     <option value="oldest">Más Antiguos</option>
-                    <option value="name_asc">Nombre (A-Z)</option>
-                    <option value="name_desc">Nombre (Z-A)</option>
                 </select>
             </div>
             <p className="text-gray-600 mb-8">Explora nuestra colección.</p>

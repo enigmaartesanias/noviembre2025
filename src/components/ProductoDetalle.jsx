@@ -28,6 +28,7 @@ const ProductoDetalle = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [relacionados, setRelacionados] = useState([]);
+    const [categoriaNombre, setCategoriaNombre] = useState('');
     const [currentSlide, setCurrentSlide] = useState(0);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,6 +127,22 @@ const ProductoDetalle = () => {
                 }
             };
 
+            const fetchCategoria = async () => {
+                try {
+                    const { data, error } = await supabase
+                        .from('categorias')
+                        .select('nombre')
+                        .eq('id', producto.categoria_id)
+                        .single();
+
+                    if (error) throw error;
+                    if (data) setCategoriaNombre(data.nombre);
+                } catch (err) {
+                    console.error('Error al cargar categoría:', err.message);
+                }
+            };
+
+            fetchCategoria();
             fetchMateriales();
         }
     }, [producto, id]);
@@ -192,8 +209,15 @@ const ProductoDetalle = () => {
                 <Link to="/" className="text-sm text-gray-600 hover:text-black hover:underline transition-colors">
                     &lt; Inicio
                 </Link>
-                <Link to="/catalogo/all/all" className="text-sm text-gray-600 hover:text-black hover:underline transition-colors">
-                    Ver Catálogo &gt;
+                <Link
+                    to={producto?.material_principal && categoriaNombre
+                        ? `/catalogo/${producto.material_principal}/${categoriaNombre}`
+                        : "/catalogo/all/all"}
+                    className="text-sm text-gray-600 hover:text-black hover:underline transition-colors"
+                >
+                    {producto?.material_principal && categoriaNombre
+                        ? `Volver a ${producto.material_principal} / ${categoriaNombre} >`
+                        : "Ver Catálogo >"}
                 </Link>
             </div>
 
