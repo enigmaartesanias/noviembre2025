@@ -5,7 +5,9 @@ import { useState, useEffect } from "react";
 // 1. DATOS Y CONFIGURACIÓN
 // ==========================================
 
-const DEFAULT_SUBTITLE = "Diseños exclusivos hechos a mano";
+
+
+const DEFAULT_SUBTITLE = "Explora nuestra colección exclusiva";
 
 const BASE_ROUTES = {
     plata: {
@@ -38,8 +40,7 @@ const CATEGORIES = [
 const MATERIAL_CARDS = [
     {
         name: "Colección Plata",
-        key: "plata",
-        description: DEFAULT_SUBTITLE,
+
         // ---------------------------------------------------------
         // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN PLATA
         // ---------------------------------------------------------
@@ -50,7 +51,7 @@ const MATERIAL_CARDS = [
     {
         name: "Colección Alpaca",
         key: "alpaca",
-        description: DEFAULT_SUBTITLE,
+
         // ---------------------------------------------------------
         // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN ALPACA
         // ---------------------------------------------------------
@@ -61,7 +62,7 @@ const MATERIAL_CARDS = [
     {
         name: "Colección Cobre",
         key: "cobre",
-        description: DEFAULT_SUBTITLE,
+
         // ---------------------------------------------------------
         // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN COBRE
         // ---------------------------------------------------------
@@ -72,7 +73,7 @@ const MATERIAL_CARDS = [
     {
         name: "Diseños Personalizados",
         key: "custom",
-        description: DEFAULT_SUBTITLE,
+
         // ---------------------------------------------------------
         // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA PERSONALIZADOS
         // ---------------------------------------------------------
