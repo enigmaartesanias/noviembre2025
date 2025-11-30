@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
     // Suscribirse a los cambios de estado de autenticación de Supabase
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event, 'Session:', session); // Para depuración
         setUser(session?.user || null); // Establece el usuario si hay sesión, o null si no
         setLoading(false); // La autenticación ha terminado de cargar
       }
