@@ -40,6 +40,7 @@ const CATEGORIES = [
 const MATERIAL_CARDS = [
     {
         name: "Colección Plata",
+        key: "plata",
 
         // ---------------------------------------------------------
         // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN PLATA
