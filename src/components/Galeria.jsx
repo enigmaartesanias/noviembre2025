@@ -54,7 +54,7 @@ const MATERIAL_CARDS = [
         // ---------------------------------------------------------
         // CAMBIA LA RUTA DE LA IMAGEN AQUÍ PARA LA COLECCIÓN ALPACA
         // ---------------------------------------------------------
-        image: "/images/collar23.png",
+        image: "/images/collar23.jpg",
         categories: CATEGORIES,
         isCustom: false,
     },
