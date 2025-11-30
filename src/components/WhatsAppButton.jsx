@@ -1,10 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 import './WhatsAppButton.css';
 
 const WhatsAppButton = () => {
     const phoneNumber = '51960282376'; // Número de WhatsApp sin + ni espacios
-    const message = encodeURIComponent('¡Hola! Me interesan sus productos artesanales.');
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+    const location = useLocation();
+    const [whatsappUrl, setWhatsappUrl] = useState('');
+
+    useEffect(() => {
+        const generateWhatsAppUrl = async () => {
+            // Detectar si estamos en una página de producto
+            const productMatch = location.pathname.match(/^\/producto\/(\d+)$/);
+
+            if (productMatch) {
+                const productId = productMatch[1];
+
+                try {
+                    // Obtener el título del producto desde Supabase
+                    const { data, error } = await supabase
+                        .from('productos')
+                        .select('titulo')
+                        .eq('id', productId)
+                        .single();
+
+                    if (!error && data) {
+                        const productTitle = data.titulo;
+                        const productUrl = window.location.href;
+                        const message = encodeURIComponent(
+                            `Hola estoy interesado, ${productTitle}, éste es el enlace ${productUrl}`
+                        );
+                        setWhatsappUrl(`https://wa.me/${phoneNumber}?text=${message}`);
+                        return;
+                    }
+                } catch (err) {
+                    console.error('Error al obtener el producto:', err);
+                }
+            }
+
+            // Mensaje por defecto si no estamos en una página de producto
+            const defaultMessage = encodeURIComponent('¡Hola! Me interesan sus productos artesanales.');
+            setWhatsappUrl(`https://wa.me/${phoneNumber}?text=${defaultMessage}`);
+        };
+
+        generateWhatsAppUrl();
+    }, [location.pathname]);
 
     return (
         <a

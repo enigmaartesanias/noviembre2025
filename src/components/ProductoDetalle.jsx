@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import iconoCompartir from '../assets/images/compartir.png';
+
 import ImageModal from './ImageModal';
 
 const LupaIcono = () => (
@@ -286,33 +286,6 @@ const ProductoDetalle = () => {
                             <span className="text-gray-600">Material:</span>
                             <p className="text-lg">{producto.material_principal}</p>
                         </div>
-                    </div>
-
-                    {/* Botones de consulta y compartir */}
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
-                        <a
-                            href={`https://wa.me/51960282376?text=${encodeURIComponent(
-                                `Estoy interesado(a) en el siguiente producto: ${producto.titulo}\n${window.location.origin}/producto/${producto.id}`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Consultar o pedir por WhatsApp"
-                            className="flex items-center justify-center gap-2 text-black font-bold"
-                        >
-                            Consultar producto
-                            <img src={iconoCompartir} alt="WhatsApp" className="w-8 h-8 ml-1" />
-                        </a>
-
-                        {/* Enlace de compartir en WhatsApp - Sutil y elegante */}
-                        <a
-                            href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-gray-500 hover:text-gray-700 flex items-center mt-2 sm:mt-0"
-                        >
-                            <span className="mr-1">🔗</span>
-                            Compartir producto
-                        </a>
                     </div>
 
                     {/* Descripción */}

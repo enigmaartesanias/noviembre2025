@@ -11,18 +11,6 @@ const Header = () => {
     const toggleDropdown = (material) => {
         setActiveDropdown(activeDropdown === material ? null : material);
     };
-    // Función para compartir la página
-    const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: 'Enigma Artesanías y Accesorios',
-                url: window.location.href,
-            });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert('¡Enlace copiado!');
-        }
-    };
 
     // Cerrar menú al hacer clic fuera
     useEffect(() => {
@@ -106,17 +94,8 @@ const Header = () => {
                     </Link>
                 </div>
 
-                {/* Botones móviles: Menú y Compartir */}
-                <div className="flex items-center space-x-4 md:hidden">
-                    {/* Botón compartir */}
-                    <button
-                        onClick={handleShare}
-                        className="text-xl text-gray-500 hover:text-gray-700"
-                        title="Compartir página"
-                    >
-                        🔗
-                    </button>
-                    {/* Botón menú móvil */}
+                {/* Botón menú móvil */}
+                <div className="flex items-center md:hidden">
                     <button onClick={toggleMenu} className="text-2xl z-50">
                         ☰
                     </button>
