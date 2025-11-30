@@ -127,7 +127,7 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
                     {isCustom ? (
                         <Link
                             to={link}
-                            className="px-6 py-2 bg-gray-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-full shadow-md transition-colors duration-300 no-underline uppercase col-span-2 text-center"
+                            className="px-6 py-3 bg-gray-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-full shadow-md transition-colors duration-300 no-underline uppercase col-span-2 text-center"
                         >
                             Ver Modelos
                         </Link>
@@ -136,7 +136,7 @@ const MaterialCard = ({ card, isActive, isAnyCardActive, onToggle }) => {
                             <Link
                                 key={cat.slug}
                                 to={getRoute(key, cat.slug)}
-                                className="px-4 py-1.5 text-xs font-bold text-white bg-gray-700 hover:bg-gray-900 rounded-full border border-gray-600 shadow-md transition-colors duration-300 no-underline uppercase text-center"
+                                className="px-4 py-3 text-xs font-bold text-white bg-gray-700 hover:bg-gray-900 rounded-full border border-gray-600 shadow-md transition-colors duration-300 no-underline uppercase text-center"
                             >
                                 {cat.name}
                             </Link>
