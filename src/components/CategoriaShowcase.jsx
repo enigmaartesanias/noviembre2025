@@ -150,7 +150,7 @@ const CategoriaShowcase = () => {
                             const formattedDate = `${month.charAt(0).toUpperCase() + month.slice(1)}. ${year}`;
 
                             return (
-                                <div key={producto.id} className="px-0 md:px-0.5">
+                                <div key={producto.id} className="px-2 md:px-3">
                                     <Link to={`/producto/${producto.id}`} className="block pb-4">
                                         {/* Contenedor de producto */}
                                         <div className="w-full h-[400px] bg-black rounded overflow-hidden flex items-center justify-center" style={{ height: '250px' }}>

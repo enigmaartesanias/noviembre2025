@@ -21,6 +21,7 @@ import Footer from './components/Footer';
 import PublicCarousel from './components/PublicCarousel';
 import ProductoDetalle from './components/ProductoDetalle';
 import Tienda from './components/Tienda';
+import WhatsAppButton from './components/WhatsAppButton';
 
 // Autenticación
 import SignUp from './components/SignUp';
@@ -68,6 +69,7 @@ function App() {
                     <Route path="/admin/productos" element={<PrivateRoute><ProductoAdmin /></PrivateRoute>} />
                     <Route path="/admin/stock" element={<PrivateRoute><StockAdmin /></PrivateRoute>} />
                 </Routes>
+                <WhatsAppButton />
                 <Footer />
             </Router>
         </AuthProvider>

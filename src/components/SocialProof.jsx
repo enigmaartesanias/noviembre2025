@@ -37,21 +37,21 @@ const SocialProof = () => {
     ];
 
     return (
-        <section className="py-12 md:py-16 bg-white">
+        <section className="py-6 md:py-16 bg-white">
             <div className="container mx-auto px-4 md:px-8 lg:px-16">
 
                 {/* Header - más compacto */}
-                <div className="text-center mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                <div className="text-center mb-4 md:mb-6">
+                    <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">
                         Únete a Nuestra Comunidad
                     </h2>
-                    <p className="text-base md:text-lg text-gray-600">
+                    <p className="text-sm md:text-lg text-gray-600">
                         Más de <span className="font-bold text-gray-900">37,000 seguidores</span> confían en nuestro arte
                     </p>
                 </div>
 
                 {/* Social Media Stats - más compacto */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6 max-w-4xl mx-auto">
                     {socialStats.map((social) => {
                         const Icon = social.icon;
                         return (
@@ -62,9 +62,9 @@ const SocialProof = () => {
                                 rel="noopener noreferrer"
                                 className="group"
                             >
-                                <div className="bg-white border-2 border-gray-200 rounded-lg p-4 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                                    <Icon className={`w-8 h-8 mx-auto mb-3 ${social.iconColor} group-hover:scale-110 transition-transform`} />
-                                    <div className="text-2xl font-bold text-gray-900 mb-1">
+                                <div className="bg-white border-2 border-gray-200 rounded-lg p-2 md:p-4 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                                    <Icon className={`w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 md:mb-3 ${social.iconColor} group-hover:scale-110 transition-transform`} />
+                                    <div className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
                                         {social.followers}
                                     </div>
                                     <div className="text-xs text-gray-600 font-medium">
@@ -77,7 +77,7 @@ const SocialProof = () => {
                 </div>
 
                 {/* CTA más discreto */}
-                <div className="text-center mt-8">
+                <div className="text-center mt-4 md:mt-6">
                     <a
                         href="https://www.instagram.com/enigma_artesanias/"
                         target="_blank"
