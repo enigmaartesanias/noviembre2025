@@ -235,7 +235,7 @@ const ProductGridPage = () => {
                         <Link to={`/producto/${product.id}`} key={product.id} className="group block h-full">
                             <div className="bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
                                 {/* Componente de imagen para la carga gradual */}
-                                <div className="h-40 sm:h-56 overflow-hidden">
+                                <div className="h-56 sm:h-56 overflow-hidden">
                                     <ProductImage
                                         src={product.imagen_principal_url}
                                         alt={product.titulo}

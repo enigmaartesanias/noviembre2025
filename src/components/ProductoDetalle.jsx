@@ -326,9 +326,7 @@ const ProductoDetalle = () => {
                                             className="w-full h-48 sm:h-56 object-cover rounded hover:shadow-lg transition-shadow"
                                         />
                                         <h3 className="mt-2 text-sm font-semibold text-gray-800">{relatedProducto.titulo}</h3>
-                                        <p className="mt-1 text-sm text-gray-600">
-                                            S/ {relatedProducto.precio}
-                                        </p>
+
                                     </Link>
                                 </div>
                             ))
