@@ -29,13 +29,24 @@ const splitCodeForLabel = (code) => {
 // central afinada en ángulo recto (fácil de cortar a mano). Línea sólida y fina,
 // separada del contenido por el padding de .label-face / .label-back.
 // totalWidth/totalHeight en mm, deben coincidir con .dumbbell-label
-const CutGuide = ({ totalWidth = 50, totalHeight = 11.4, faceWidth = 20, waistInset = 1.5 }) => {
+// Guía de corte tipo "cintura de avispa": contorno completo del sticker con la cintura
+// central afinada en curva suave (no en ángulo recto), que arranca casi al terminar
+// el QR y no se pinza demasiado en el centro. Línea sólida y fina, separada del
+// contenido por el padding de .label-face / .label-back.
+// totalWidth/totalHeight en mm, deben coincidir con .dumbbell-label
+const CutGuide = ({ totalWidth = 50, totalHeight = 11.4, faceWidth = 12, waistInset = 1.2, waistFlatHalf = 2, curveSpread = 5 }) => {
     const bridgeStart = faceWidth;
     const bridgeEnd = totalWidth - faceWidth;
-    const narrowStart = bridgeStart + 2;
-    const narrowEnd = bridgeEnd - 2;
-    const d = `M0,0 L${bridgeStart},0 L${narrowStart},${waistInset} L${narrowEnd},${waistInset} L${bridgeEnd},0 L${totalWidth},0 ` +
-        `L${totalWidth},${totalHeight} L${bridgeEnd},${totalHeight} L${narrowEnd},${totalHeight - waistInset} L${narrowStart},${totalHeight - waistInset} L${bridgeStart},${totalHeight} L0,${totalHeight} Z`;
+    const mid = totalWidth / 2;
+    const waistLeftX = mid - waistFlatHalf;
+    const waistRightX = mid + waistFlatHalf;
+    const c1 = bridgeStart + curveSpread;
+    const c2 = bridgeEnd - curveSpread;
+    const bottomWaist = totalHeight - waistInset;
+    const d = `M0,0 L${bridgeStart},0 C${c1},0 ${c1},${waistInset} ${waistLeftX},${waistInset} ` +
+        `L${waistRightX},${waistInset} C${c2},${waistInset} ${c2},0 ${bridgeEnd},0 L${totalWidth},0 ` +
+        `L${totalWidth},${totalHeight} L${bridgeEnd},${totalHeight} C${c2},${totalHeight} ${c2},${bottomWaist} ${waistRightX},${bottomWaist} ` +
+        `L${waistLeftX},${bottomWaist} C${c1},${bottomWaist} ${c1},${totalHeight} ${bridgeStart},${totalHeight} L0,${totalHeight} Z`;
     return (
         <svg className="cut-guide" viewBox={`0 0 ${totalWidth} ${totalHeight}`} preserveAspectRatio="none">
             <path d={d} fill="none" stroke="#444" strokeWidth="0.2" />
@@ -148,10 +159,10 @@ const ReporteCodigosQR = () => {
 
     const filteredProductos = productos.filter(p => {
         const matchesSearch =
-            p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.nombre && p.nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
             (p.codigo_usuario && p.codigo_usuario.toLowerCase().includes(searchTerm.toLowerCase()));
-        const matchesCategory = categoryFilter === 'TODOS' ||
-            (p.categoria && p.categoria.toUpperCase() === categoryFilter);
+        const pCat = (p.categoria ? p.categoria : 'OTROS').toUpperCase();
+        const matchesCategory = categoryFilter === 'TODOS' || pCat === categoryFilter;
         let matchesDate = true;
         if (dateFilter) {
             const pDate = getLocalYYYYMMDD(p.created_at);
@@ -264,7 +275,7 @@ const ReporteCodigosQR = () => {
                                     )}
                                     <div className="w-full flex flex-col items-center justify-center min-h-[120px] p-2 gap-2">
                                         <QRCode value={producto.codigo_usuario || String(producto.id)} size={56} level="L" />
-                                        <span className="font-bold text-gray-700 text-xs text-center line-clamp-2 leading-tight">
+                                        <span className="font-bold text-gray-700 text-xs text-center line-clamp-2 leading-tight uppercase">
                                             {producto.nombre}
                                         </span>
                                     </div>
@@ -440,11 +451,10 @@ const ReporteCodigosQR = () => {
                 }
 
                 .reference-box {
-                    width: 25mm;
+                    width: 16mm;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
-                    font-size: 6pt;
                     color: #444;
                     border-right: 1px dashed #ccc;
                     padding-right: 1mm;
@@ -452,15 +462,22 @@ const ReporteCodigosQR = () => {
 
                 .ref-text-name {
                     font-weight: bold;
-                    white-space: nowrap;
+                    font-size: 5pt;
+                    line-height: 1.15;
+                    white-space: normal;
+                    word-break: break-word;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
                     overflow: hidden;
-                    text-overflow: ellipsis;
                 }
 
                 .ref-text-code {
                     font-family: monospace;
-                    font-size: 5.5pt;
+                    font-size: 4.5pt;
+                    line-height: 1.15;
                     color: #666;
+                    word-break: break-word;
                 }
 
                 /* ESTILO BANDERÍN / HUESO DE PERRO — sin borde/padding propios,          */
@@ -496,7 +513,13 @@ const ReporteCodigosQR = () => {
                 }
 
                 .label-front {
-                    justify-content: center;
+                    align-items: flex-start;
+                }
+
+                .label-back {
+                    align-items: flex-end;
+                    justify-content: space-between;
+                    text-align: center;
                 }
 
                 .qr-wrapper {
@@ -508,11 +531,6 @@ const ReporteCodigosQR = () => {
                     position: relative;
                     width: 10mm;
                     height: 100%;
-                }
-
-                .label-back {
-                    justify-content: space-between;
-                    text-align: center;
                 }
 
                 /* Código en 2 líneas, sin separador */
@@ -538,6 +556,7 @@ const ReporteCodigosQR = () => {
                     font-weight: 400;
                     color: #000;
                     width: 100%;
+                    text-align: right;
                 }
             `}</style>
         </div>

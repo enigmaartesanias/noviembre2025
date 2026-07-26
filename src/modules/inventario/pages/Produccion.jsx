@@ -70,10 +70,15 @@ const Produccion = () => {
     const [showCostosModal, setShowCostosModal] = useState(false);
     const [itemToFinish, setItemToFinish] = useState(null);
     const [costosFormData, setCostosFormData] = useState({
+        costo_unitario_directo: '',
+        costo_insumos_extra: '',
+        precio_venta_sugerido: '',
         peso_material_gramos: '',
         horas_trabajo_real: '',
-        costo_insumos_extra: '',
-        sueldo_hora_objetivo: '15.00'
+        sueldo_hora_objetivo: '15.00',
+        usar_calculo_detallado: false,
+        selected_image_file: null,
+        preview_image_url: ''
     });
 
     // Bloquear scroll cuando el modal está abierto
@@ -396,11 +401,21 @@ const Produccion = () => {
 
     const handleMarkAsComplete = (item) => {
         setItemToFinish(item);
+        const cant = parseInt(item.cantidad) || 1;
+        const costoUnitActual = item.costo_materiales > 0
+            ? (parseFloat(item.costo_materiales) / cant).toFixed(2)
+            : '';
+
         setCostosFormData({
-            peso_material_gramos: '',
-            horas_trabajo_real: '',
-            costo_insumos_extra: '',
-            sueldo_hora_objetivo: '15.00'
+            costo_unitario_directo: costoUnitActual,
+            costo_insumos_extra: item.costo_insumos_extra ? String(item.costo_insumos_extra) : '',
+            precio_venta_sugerido: item.precio_sugerido ? parseFloat(item.precio_sugerido).toFixed(2) : '',
+            peso_material_gramos: item.peso_material_gramos ? String(item.peso_material_gramos) : '',
+            horas_trabajo_real: item.horas_trabajo_real ? String(item.horas_trabajo_real) : '',
+            sueldo_hora_objetivo: '15.00',
+            usar_calculo_detallado: false,
+            selected_image_file: null,
+            preview_image_url: item.imagen_url || ''
         });
         setShowCostosModal(true);
     };
@@ -408,56 +423,76 @@ const Produccion = () => {
     const handleConfirmTerminarWithCostos = async () => {
         if (!itemToFinish) return;
 
-        // Calcular costos finales basados en los inputs del modal
-        const metalSeleccionado = metalesDisponibles.find(m => m.nombre === itemToFinish.metal);
-        const precioGramoMetal = metalSeleccionado ? parseFloat(metalSeleccionado.precio_gramo) : 0;
-
-        const cantidad = parseInt(itemToFinish.cantidad) || 1;
-        const peso = parseFloat(costosFormData.peso_material_gramos) || 0;
-        const horas = parseFloat(costosFormData.horas_trabajo_real) || 0;
-        const insumos = parseFloat(costosFormData.costo_insumos_extra) || 0;
-        const sueldoHora = parseFloat(costosFormData.sueldo_hora_objetivo) || 15.00;
-
-        const factores = { 'Baja': 1.0, 'Media': 1.2, 'Alta': 1.5 };
-        const factorComplejidad = factores[itemToFinish.complejidad] || 1.2;
-
-        const costoMetalTotal = peso * precioGramoMetal;
-        const costoManoObraTotal = horas * sueldoHora * factorComplejidad;
-        const costoDesgasteTotal = (costoMetalTotal + costoManoObraTotal) * 0.15;
-        const costoTotalProduccion = costoMetalTotal + costoManoObraTotal + costoDesgasteTotal + insumos;
-
-        const costoTotalUnitario = costoTotalProduccion / cantidad;
-        const precioSugerido = (((costoMetalTotal + costoManoObraTotal + costoDesgasteTotal) * 2.0) + (insumos * 1.5)) / cantidad;
-
         try {
             setLoading(true);
-            // 1. Guardar costos reales en produccion_taller
+            let finalImageUrl = itemToFinish.imagen_url || null;
+
+            // Subir imagen si se seleccionó un archivo nuevo en el modal
+            if (costosFormData.selected_image_file) {
+                const optimizedFile = await compressAndResizeImage(costosFormData.selected_image_file, {
+                    maxSizeMB: 0.5,
+                    maxWidth: 1024,
+                    quality: 0.8
+                });
+                const fileExtension = optimizedFile.name?.split('.').pop() || 'jpg';
+                const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+                const fileName = `produccion/${uniqueId}.${fileExtension}`;
+                const storageRef = ref(storage, fileName);
+                await uploadBytes(storageRef, optimizedFile);
+                finalImageUrl = await getDownloadURL(storageRef);
+            }
+
+            const cantidad = parseInt(itemToFinish.cantidad) || 1;
+            let costoMaterialTotal = 0;
+            let costoManoObraTotal = 0;
+            let costoDesgasteTotal = 0;
+            let insumosExtra = parseFloat(costosFormData.costo_insumos_extra) || 0;
+            let precioSugerido = parseFloat(costosFormData.precio_venta_sugerido) || 0;
+
+            if (costosFormData.usar_calculo_detallado) {
+                const metalSeleccionado = metalesDisponibles.find(m => m.nombre === itemToFinish.metal);
+                const precioGramoMetal = metalSeleccionado ? parseFloat(metalSeleccionado.precio_gramo) : 0;
+                const peso = parseFloat(costosFormData.peso_material_gramos) || 0;
+                const horas = parseFloat(costosFormData.horas_trabajo_real) || 0;
+                const sueldoHora = parseFloat(costosFormData.sueldo_hora_objetivo) || 15.00;
+                const factores = { 'Baja': 1.0, 'Media': 1.2, 'Alta': 1.5 };
+                const factorComplejidad = factores[itemToFinish.complejidad] || 1.2;
+
+                costoMaterialTotal = peso * precioGramoMetal;
+                costoManoObraTotal = horas * sueldoHora * factorComplejidad;
+                costoDesgasteTotal = (costoMaterialTotal + costoManoObraTotal) * 0.15;
+                if (!precioSugerido) {
+                    precioSugerido = (((costoMaterialTotal + costoManoObraTotal + costoDesgasteTotal) * 2.0) + (insumosExtra * 1.5)) / cantidad;
+                }
+            } else {
+                // Ingreso Directo de Costo Unitario
+                const costoUnitarioDirecto = parseFloat(costosFormData.costo_unitario_directo) || 0;
+                costoMaterialTotal = (costoUnitarioDirecto * cantidad);
+                if (!precioSugerido && costoUnitarioDirecto > 0) {
+                    precioSugerido = costoUnitarioDirecto * 2.0; // Margen comercial objetivo x2
+                }
+            }
+
+            // 1. Guardar costos reales e imagen en la base de datos
             await produccionDB.updateCostosReales(itemToFinish.id_produccion, {
-                peso_material_gramos: peso,
-                horas_trabajo_real: horas,
-                costo_insumos_extra: insumos,
-                costo_materiales: costoMetalTotal + insumos,
+                peso_material_gramos: parseFloat(costosFormData.peso_material_gramos) || 0,
+                horas_trabajo_real: parseFloat(costosFormData.horas_trabajo_real) || 0,
+                costo_insumos_extra: insumosExtra,
+                costo_materiales: costoMaterialTotal,
                 mano_de_obra: costoManoObraTotal,
                 costo_herramientas: costoDesgasteTotal,
-                precio_sugerido: precioSugerido
+                precio_sugerido: precioSugerido,
+                imagen_url: finalImageUrl
             });
 
-            // 2. Marcar como terminado
+            // 2. Marcar estado a terminado
             await produccionDB.updateEstado(itemToFinish.id_produccion, 'terminado');
 
             if (itemToFinish.tipo_produccion === 'STOCK') {
-                // STOCK → dejar pendiente en Inventario
                 await produccionDB.marcarPendienteInventario(itemToFinish.id_produccion);
-                toast.success('✅ Producción terminada. Quedó pendiente de ingreso en Inventario.', { duration: 4000 });
+                toast.success('✅ Producción terminada. Quedó lista para ingreso en Inventario.');
             } else {
-                // PEDIDO → terminado directo
-                toast.success('✅ Producción de pedido terminada con costos registrados.');
-
-                // Disparar flujo de subida de fotos AUTOMÁTICAMENTE para pedidos si no tiene una
-                if (!itemToFinish.imagen_url) {
-                    setFinishedItemForPhoto(itemToFinish);
-                    setShowPhotoUploadModal(true);
-                }
+                toast.success('✅ Producción de pedido terminada correctamente.');
             }
 
             fetchProduccion();
@@ -465,8 +500,8 @@ const Produccion = () => {
             setShowCostosModal(false);
             setItemToFinish(null);
         } catch (error) {
-            console.error('Error al terminar producción con costos:', error);
-            toast.error('Error al guardar costos y terminar: ' + error.message);
+            console.error('Error al terminar producción:', error);
+            toast.error('Error al guardar y terminar: ' + (error.message || 'Error desconocido'));
         } finally {
             setLoading(false);
         }
@@ -1340,6 +1375,17 @@ const Produccion = () => {
                                     {/* 6. Acciones - Iconos solamente */}
                                     <td className="px-3 text-right whitespace-nowrap align-middle">
                                         <div className="flex justify-end items-center gap-1 md:gap-2">
+                                            {/* Terminar Directo - Solo si está en proceso */}
+                                            {item.estado_produccion === 'en_proceso' && (
+                                                <button
+                                                    onClick={() => handleMarkAsComplete(item)}
+                                                    className="w-[44px] h-[44px] md:w-[40px] md:h-[40px] flex items-center justify-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-full transition-all"
+                                                    title="Finalizar fabricación y registrar costo/foto"
+                                                >
+                                                    <FaCheckCircle size={22} className="md:w-5 md:h-5 text-emerald-500 hover:scale-110 transition-transform" />
+                                                </button>
+                                            )}
+
                                             {/* Ver Detalle */}
                                             <button
                                                 onClick={() => handleView(item)}
@@ -1847,177 +1893,273 @@ const Produccion = () => {
                 )
             }
 
-            {/* Modal Registrar Costos al Finalizar (Terminar Producción) */}
+            {/* ──────────────────────────────────────────────────────
+                Modal Unificado: Finalizar Fabricación
+                - Costo unitario directo (BISUTERIA y metales)
+                - Foto del producto terminado integrada
+                - Modo avanzado: peso + horas (opcional)
+            ─────────────────────────────────────────────────────── */}
             {showCostosModal && itemToFinish && (() => {
-                const metalSeleccionado = metalesDisponibles.find(m => m.nombre === itemToFinish.metal);
-                const precioGramoMetal = metalSeleccionado ? parseFloat(metalSeleccionado.precio_gramo) : 0;
-
                 const cantidad = parseInt(itemToFinish.cantidad) || 1;
-                const peso = parseFloat(costosFormData.peso_material_gramos) || 0;
-                const horas = parseFloat(costosFormData.horas_trabajo_real) || 0;
-                const insumos = parseFloat(costosFormData.costo_insumos_extra) || 0;
-                const sueldoHora = parseFloat(costosFormData.sueldo_hora_objetivo) || 15.00;
-
-                const factores = { 'Baja': 1.0, 'Media': 1.2, 'Alta': 1.5 };
-                const factorComplejidad = factores[itemToFinish.complejidad] || 1.2;
-
-                const costoMetalTotal = peso * precioGramoMetal;
-                const costoManoObraTotal = horas * sueldoHora * factorComplejidad;
-                const costoDesgasteTotal = (costoMetalTotal + costoManoObraTotal) * 0.15;
-                const costoTotalProduccion = costoMetalTotal + costoManoObraTotal + costoDesgasteTotal + insumos;
-
-                const costoTotalUnitario = costoTotalProduccion / cantidad;
-                const precioSugerido = (((costoMetalTotal + costoManoObraTotal + costoDesgasteTotal) * 2.0) + (insumos * 1.5)) / cantidad;
+                const costoUnitario = parseFloat(costosFormData.costo_unitario_directo) || 0;
+                const insumosExtra = parseFloat(costosFormData.costo_insumos_extra) || 0;
+                const costoTotalEstimado = (costoUnitario * cantidad) + insumosExtra;
+                const precioVenta = parseFloat(costosFormData.precio_venta_sugerido) || (costoUnitario > 0 ? costoUnitario * 2 : 0);
+                const esBisuteria = itemToFinish.metal === 'BISUTERIA';
+                const nombreProducto = itemToFinish.nombre_producto || `${itemToFinish.tipo_producto} · ${itemToFinish.metal}`;
 
                 return (
-                    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[380px] max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
-                            {/* Header Gradiente Elegante */}
-                            <div className="bg-slate-900 px-5 py-4 text-white flex justify-between items-center">
+                    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-[420px] max-h-[95vh] overflow-hidden flex flex-col border border-gray-100">
+
+                            {/* ── Header ── */}
+                            <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-5 py-4 text-white flex justify-between items-start flex-shrink-0">
                                 <div>
-                                    <h3 className="text-sm font-bold tracking-wide">Finalizar Fabricación</h3>
-                                    <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wider">
-                                        {itemToFinish.nombre_producto || `${itemToFinish.tipo_producto} de ${itemToFinish.metal}`}
-                                    </p>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <FaCheckCircle className="text-emerald-400" size={14} />
+                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-[0.15em]">Finalizar Fabricación</span>
+                                    </div>
+                                    <h3 className="text-sm font-bold tracking-wide leading-snug">{nombreProducto}</h3>
+                                    <div className="flex gap-2 mt-1.5 flex-wrap">
+                                        <span className="px-2 py-0.5 bg-white/10 rounded-md text-[10px] font-semibold uppercase tracking-wide">{itemToFinish.metal}</span>
+                                        <span className="px-2 py-0.5 bg-white/10 rounded-md text-[10px] font-semibold">{cantidad} {cantidad > 1 ? 'piezas' : 'pieza'}</span>
+                                        {itemToFinish.complejidad && (
+                                            <span className="px-2 py-0.5 bg-amber-500/30 text-amber-200 rounded-md text-[10px] font-semibold uppercase">{itemToFinish.complejidad}</span>
+                                        )}
+                                    </div>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => { setShowCostosModal(false); setItemToFinish(null); }}
-                                    className="text-gray-400 hover:text-white transition"
+                                    className="text-gray-400 hover:text-white transition mt-1 flex-shrink-0"
                                 >
                                     <FaTimes size={16} />
                                 </button>
                             </div>
 
-                            {/* Contenido del Formulario */}
-                            <div className="p-4 space-y-3 overflow-y-auto custom-scrollbar">
-                                <div className="bg-blue-50/50 rounded-xl p-3 border border-blue-100/50 space-y-2">
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-500 font-medium">Complejidad:</span>
-                                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md font-bold uppercase tracking-wider text-[10px]">
-                                            {itemToFinish.complejidad}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-500 font-medium">Metal:</span>
-                                        <span className="font-bold text-gray-800 uppercase">{itemToFinish.metal}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-500 font-medium">Cantidad:</span>
-                                        <span className="font-bold text-gray-800">{cantidad} pz</span>
-                                    </div>
+                            {/* ── Contenido con scroll ── */}
+                            <div className="p-4 space-y-4 overflow-y-auto flex-1">
+
+                                {/* Sección 1: Foto del producto terminado */}
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                        <FaCamera size={10} /> Foto del producto terminado
+                                        <span className="text-gray-300 font-normal normal-case tracking-normal">(opcional)</span>
+                                    </label>
+
+                                    {/* Área de subida */}
+                                    <label className="block cursor-pointer">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            capture="environment"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                if (!validateImageFile(file)) {
+                                                    toast.error('Formato de imagen no válido');
+                                                    return;
+                                                }
+                                                const previewUrl = URL.createObjectURL(file);
+                                                setCostosFormData(prev => ({
+                                                    ...prev,
+                                                    selected_image_file: file,
+                                                    preview_image_url: previewUrl
+                                                }));
+                                            }}
+                                        />
+                                        {costosFormData.preview_image_url ? (
+                                            <div className="relative rounded-2xl overflow-hidden bg-gray-50 border border-gray-200">
+                                                <img
+                                                    src={costosFormData.preview_image_url}
+                                                    alt="Vista previa"
+                                                    className="w-full h-36 object-cover"
+                                                />
+                                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                                    <span className="text-white text-xs font-bold bg-black/50 px-3 py-1 rounded-full">Cambiar foto</span>
+                                                </div>
+                                                {costosFormData.selected_image_file && (
+                                                    <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                                                        Nueva foto ✓
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-all flex flex-col items-center justify-center py-5 gap-2">
+                                                <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
+                                                    <FaCamera className="text-gray-400" size={16} />
+                                                </div>
+                                                <span className="text-xs text-gray-400 font-medium">Toca para subir o tomar foto</span>
+                                            </div>
+                                        )}
+                                    </label>
                                 </div>
 
-                                {/* Form Inputs */}
-                                <div className="space-y-2">
-                                    {itemToFinish.metal !== 'BISUTERIA' && (
-                                        <>
-                                            <div>
-                                                <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase tracking-wider">
-                                                    {cantidad > 1 ? 'Peso total del lote (gramos)' : 'Peso (gramos)'}
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    placeholder="0.00"
-                                                    value={costosFormData.peso_material_gramos}
-                                                    onChange={(e) => setCostosFormData({ ...costosFormData, peso_material_gramos: e.target.value })}
-                                                    className="w-full rounded-xl border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                                                    required
-                                                />
-                                            </div>
+                                {/* Separador */}
+                                <div className="border-t border-gray-100" />
 
-                                            <div>
-                                                <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase tracking-wider">
-                                                    {cantidad > 1 ? 'Tiempo total del lote (horas)' : 'Tiempo (horas)'}
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    placeholder="0.0"
-                                                    value={costosFormData.horas_trabajo_real}
-                                                    onChange={(e) => setCostosFormData({ ...costosFormData, horas_trabajo_real: e.target.value })}
-                                                    className="w-full rounded-xl border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                                                    required
-                                                />
-                                            </div>
-                                        </>
+                                {/* Sección 2: Costo de producción */}
+                                <div className="space-y-3">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                        <FaMoneyBillWave size={10} /> Costo de producción
+                                    </label>
+
+                                    {/* Costo Unitario Directo (siempre visible) */}
+                                    <div>
+                                        <label className="block text-[11px] text-gray-600 font-semibold mb-1">
+                                            {cantidad > 1 ? `Costo unitario por pieza (S/)` : `Costo unitario (S/)`}
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">S/</span>
+                                            <input
+                                                type="number"
+                                                step="0.50"
+                                                min="0"
+                                                placeholder="0.00"
+                                                value={costosFormData.costo_unitario_directo}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const precio = parseFloat(val) > 0 ? (parseFloat(val) * 2).toFixed(2) : '';
+                                                    setCostosFormData(prev => ({
+                                                        ...prev,
+                                                        costo_unitario_directo: val,
+                                                        precio_venta_sugerido: prev.precio_venta_sugerido || precio
+                                                    }));
+                                                }}
+                                                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white text-sm font-bold text-gray-800"
+                                                autoFocus
+                                            />
+                                        </div>
+                                        {cantidad > 1 && costoUnitario > 0 && (
+                                            <p className="text-[10px] text-gray-400 mt-1">
+                                                Total lote: <span className="font-bold text-gray-600">S/ {(costoUnitario * cantidad).toFixed(2)}</span>
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Insumos Extra */}
+                                    <div>
+                                        <label className="block text-[11px] text-gray-600 font-semibold mb-1">
+                                            Insumos extra — piedras, gemas, etc. (S/)
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">S/</span>
+                                            <input
+                                                type="number"
+                                                step="0.50"
+                                                min="0"
+                                                placeholder="0.00"
+                                                value={costosFormData.costo_insumos_extra}
+                                                onChange={(e) => setCostosFormData(prev => ({ ...prev, costo_insumos_extra: e.target.value }))}
+                                                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white text-sm"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Toggle cálculo avanzado (solo si no es bisutería o siempre) */}
+                                    {!esBisuteria && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setCostosFormData(prev => ({ ...prev, usar_calculo_detallado: !prev.usar_calculo_detallado }))}
+                                            className="flex items-center gap-2 text-[11px] text-indigo-600 font-semibold hover:underline transition"
+                                        >
+                                            <span className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${costosFormData.usar_calculo_detallado ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}>
+                                                {costosFormData.usar_calculo_detallado && <FaCheck size={7} className="text-white" />}
+                                            </span>
+                                            Calcular por peso y horas de trabajo (metal)
+                                        </button>
                                     )}
 
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-gray-600 mb-1 uppercase tracking-wider">
-                                            {cantidad > 1 ? 'Insumos Extra Totales (S/)' : 'Insumos Extra (S/)'}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="0.00"
-                                            value={costosFormData.costo_insumos_extra}
-                                            onChange={(e) => setCostosFormData({ ...costosFormData, costo_insumos_extra: e.target.value })}
-                                            className="w-full rounded-xl border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                                        />
-                                        <p className="text-[9px] text-gray-400 mt-1">Piedras, gemas, soldadura o insumos adicionales.</p>
-                                    </div>
+                                    {/* Campos avanzados: solo si toggle está activo */}
+                                    {costosFormData.usar_calculo_detallado && !esBisuteria && (
+                                        <div className="bg-indigo-50/60 rounded-xl p-3 border border-indigo-100 space-y-2">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="block text-[10px] text-indigo-700 font-bold mb-1 uppercase tracking-wide">
+                                                        {cantidad > 1 ? 'Peso total lote (g)' : 'Peso (gramos)'}
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        placeholder="0.00"
+                                                        value={costosFormData.peso_material_gramos}
+                                                        onChange={(e) => setCostosFormData(prev => ({ ...prev, peso_material_gramos: e.target.value }))}
+                                                        className="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] text-indigo-700 font-bold mb-1 uppercase tracking-wide">
+                                                        {cantidad > 1 ? 'Tiempo total (h)' : 'Tiempo (horas)'}
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.5"
+                                                        placeholder="0.0"
+                                                        value={costosFormData.horas_trabajo_real}
+                                                        onChange={(e) => setCostosFormData(prev => ({ ...prev, horas_trabajo_real: e.target.value }))}
+                                                        className="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <p className="text-[9px] text-indigo-500">El costo unitario calculado sobreescribirá el valor ingresado arriba.</p>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Cálculos en tiempo real */}
-                                <div className="border-t border-gray-100 pt-3 space-y-2">
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-400">Costo Material (Metal):</span>
-                                        <span className="font-mono text-gray-700">S/ {costoMetalTotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-400">Mano de Obra (Trabajo):</span>
-                                        <span className="font-mono text-gray-700">S/ {costoManoObraTotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-400">Mermas y Herramientas (15%):</span>
-                                        <span className="font-mono text-gray-700">S/ {costoDesgasteTotal.toFixed(2)}</span>
-                                    </div>
+                                {/* Separador */}
+                                <div className="border-t border-gray-100" />
 
-                                    {/* Costo Unitario Promedio */}
-                                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex justify-between items-center">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-gray-400 font-bold uppercase leading-none">Costo Unitario</span>
-                                            <span className="text-[8px] text-gray-400 mt-0.5">fabricación por pieza</span>
-                                        </div>
-                                        <span className="text-base font-black text-blue-900 font-mono">
-                                            S/ {costoTotalUnitario.toFixed(2)}
-                                        </span>
+                                {/* Sección 3: Precio de venta */}
+                                <div>
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                        🏷️ Precio de venta
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold text-sm">S/</span>
+                                        <input
+                                            type="number"
+                                            step="0.50"
+                                            min="0"
+                                            placeholder="0.00"
+                                            value={costosFormData.precio_venta_sugerido}
+                                            onChange={(e) => setCostosFormData(prev => ({ ...prev, precio_venta_sugerido: e.target.value }))}
+                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-amber-50 text-sm font-bold text-amber-800"
+                                        />
                                     </div>
-
-                                    {/* Venta Sugerida */}
-                                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex justify-between items-center shadow-sm">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-amber-700 font-bold uppercase leading-none">Precio Sugerido</span>
-                                            <span className="text-[8px] text-amber-500 mt-0.5">margen comercial objetivo</span>
+                                    {costoUnitario > 0 && precioVenta > 0 && (
+                                        <div className="mt-1.5 flex items-center justify-between text-[10px]">
+                                            <span className="text-gray-400">Costo total estimado:</span>
+                                            <span className="font-bold text-gray-600">S/ {costoTotalEstimado.toFixed(2)}</span>
                                         </div>
-                                        <span className="text-base font-black text-amber-700 font-mono">
-                                            S/ {precioSugerido.toFixed(2)}
-                                        </span>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Footer del Modal */}
-                            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+                            {/* ── Footer ── */}
+                            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3 flex-shrink-0">
                                 <button
                                     onClick={() => { setShowCostosModal(false); setItemToFinish(null); }}
-                                    className="flex-1 py-2.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition active:scale-95"
+                                    className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-xs uppercase tracking-wider transition active:scale-95"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleConfirmTerminarWithCostos}
                                     disabled={loading}
-                                    className={`flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition active:scale-95 shadow-md shadow-green-200 flex items-center justify-center gap-1.5 \${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`flex-[2] py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition active:scale-95 flex items-center justify-center gap-2 shadow-md ${loading ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200'}`}
                                 >
-                                    {loading ? 'Procesando...' : 'Completar'}
+                                    {loading ? (
+                                        <><FaSpinner className="animate-spin" size={14} /> Guardando...</>
+                                    ) : (
+                                        <><FaCheckCircle size={14} /> Confirmar y Finalizar</>
+                                    )}
                                 </button>
                             </div>
                         </div>
                     </div>
                 );
             })()}
+
 
             {/* Modal de Ingreso a Stock — DESACTIVADO: ahora se gestiona desde el módulo Inventario */}
             {/* {showStockIngressModal && finishedStockItem && (

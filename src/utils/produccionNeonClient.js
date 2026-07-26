@@ -206,7 +206,8 @@ RETURNING *
         costo_materiales = ${data.costo_materiales || 0},
         mano_de_obra = ${data.mano_de_obra || 0},
         costo_herramientas = ${data.costo_herramientas || 0},
-        precio_sugerido = ${data.precio_sugerido || 0}
+        precio_sugerido = ${data.precio_sugerido || 0},
+        imagen_url = COALESCE(${data.imagen_url || null}, imagen_url)
       WHERE id_produccion = ${id}
       RETURNING *
     `;
@@ -304,12 +305,13 @@ COUNT(*) as total_registros,
   async markAsTransferred(id_produccion, producto_externo_id) {
     const [produccion] = await sql`
       UPDATE produccion_taller SET
-transferido_inventario = TRUE,
-  fecha_transferencia = CURRENT_TIMESTAMP,
-  producto_externo_id = ${producto_externo_id}
+        transferido_inventario = TRUE,
+        pendiente_inventario = FALSE,
+        fecha_transferencia = CURRENT_TIMESTAMP,
+        producto_externo_id = ${producto_externo_id}
       WHERE id_produccion = ${id_produccion}
-RETURNING *
-  `;
+      RETURNING *
+    `;
     return produccion;
   },
 
@@ -338,6 +340,7 @@ RETURNING *
       LEFT JOIN pedidos p ON pt.pedido_id = p.id_pedido
       WHERE pt.estado_produccion = 'terminado'
         AND pt.pendiente_inventario = true
+        AND (pt.transferido_inventario IS NOT TRUE)
       ORDER BY pt.fecha_fin_produccion DESC, pt.created_at DESC
     `;
     return items.map(p => ({
@@ -351,7 +354,8 @@ RETURNING *
   async marcarIngresadoInventario(id) {
     const [produccion] = await sql`
       UPDATE produccion_taller
-      SET pendiente_inventario = false
+      SET pendiente_inventario = false,
+          transferido_inventario = true
       WHERE id_produccion = ${id}
       RETURNING *
     `;

@@ -158,6 +158,7 @@ const StockIngressModal = ({ item, onSuccess, onCancel }) => {
                 produccionId: item.id_produccion,
                 codigo_produccion: item.codigo_correlativo || `PR-${String(item.id_produccion).padStart(4, '0')}`,
                 tipo_producto: item.tipo_producto,
+                categoria: item.tipo_producto || item.categoria || 'OTROS',
                 tipo_inventario: tipoIngreso,
                 origen_producto: 'Produccion',
                 nombre: item.nombre_producto || `${item.tipo_producto} de ${item.metal}`,
@@ -169,6 +170,7 @@ const StockIngressModal = ({ item, onSuccess, onCancel }) => {
             // 3. Marcar como transferido en producción
             if (result) {
                 await produccionDB.markAsTransferred(item.id_produccion, result.id);
+                await produccionDB.marcarIngresadoInventario(item.id_produccion);
             }
 
             toast.success(
