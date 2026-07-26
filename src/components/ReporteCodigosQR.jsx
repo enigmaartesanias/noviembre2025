@@ -16,6 +16,33 @@ const getLocalYYYYMMDD = (dateInput) => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
+// Parte el código (ej: "COMP-ANI-ALP-18") en 2 líneas balanceadas por grupos
+const splitCodeForLabel = (code) => {
+    if (!code) return ['CÓDIGO', ''];
+    const parts = code.split('-');
+    if (parts.length <= 1) return [code, ''];
+    const mid = Math.ceil(parts.length / 2);
+    return [parts.slice(0, mid).join('-'), parts.slice(mid).join('-')];
+};
+
+// Guía de corte tipo "hueso de perro": contorno completo del sticker con la cintura
+// central afinada en ángulo recto (fácil de cortar a mano). Línea sólida y fina,
+// separada del contenido por el padding de .label-face / .label-back.
+// totalWidth/totalHeight en mm, deben coincidir con .dumbbell-label
+const CutGuide = ({ totalWidth = 50, totalHeight = 11.4, faceWidth = 20, waistInset = 1.5 }) => {
+    const bridgeStart = faceWidth;
+    const bridgeEnd = totalWidth - faceWidth;
+    const narrowStart = bridgeStart + 2;
+    const narrowEnd = bridgeEnd - 2;
+    const d = `M0,0 L${bridgeStart},0 L${narrowStart},${waistInset} L${narrowEnd},${waistInset} L${bridgeEnd},0 L${totalWidth},0 ` +
+        `L${totalWidth},${totalHeight} L${bridgeEnd},${totalHeight} L${narrowEnd},${totalHeight - waistInset} L${narrowStart},${totalHeight - waistInset} L${bridgeStart},${totalHeight} L0,${totalHeight} Z`;
+    return (
+        <svg className="cut-guide" viewBox={`0 0 ${totalWidth} ${totalHeight}`} preserveAspectRatio="none">
+            <path d={d} fill="none" stroke="#444" strokeWidth="0.2" />
+        </svg>
+    );
+};
+
 const ReporteCodigosQR = () => {
     const navigate = useNavigate();
     const [productos, setProductos] = useState([]);
@@ -135,12 +162,13 @@ const ReporteCodigosQR = () => {
 
     const selectedProductsData = productos.filter(p => selectedIds.includes(p.id));
 
+    // Generador de filas ajustado para acomodar etiquetas más anchas (banderines)
     const generateRows = () => {
         let rows = [];
         selectedProductsData.forEach(prod => {
             let labelsLeft = printQuantities[prod.id] || 10;
             while (labelsLeft > 0) {
-                const labelsInThisRow = Math.min(labelsLeft, 8);
+                const labelsInThisRow = Math.min(labelsLeft, 3); // 3 banderines horizontales por fila
                 rows.push({ data: prod, labelCount: labelsInThisRow });
                 labelsLeft -= labelsInThisRow;
             }
@@ -250,37 +278,56 @@ const ReporteCodigosQR = () => {
                 )}
             </div>
 
-            {/* VISTA DE IMPRESIÓN */}
+            {/* VISTA DE IMPRESIÓN (Estructura Banderín Doble Cara) */}
             <div className={`print-view-container ${isDownloading ? 'visible-for-capture' : ''}`} ref={printRef}>
                 <div className="print-page-wrapper">
-                    {generateRows().map((row, idx) => (
-                        <div key={idx} className="label-row">
+                    {generateRows().map((row, idx) => {
+                        const [codeLine1, codeLine2] = splitCodeForLabel(row.data.codigo_usuario);
+                        return (
+                            <div key={idx} className="label-row">
 
-                            {/* ZONA DE REFERENCIA — nombre + código (Orientación visual a la izquierda) */}
-                            <div className="reference-box">
-                                <div className="ref-text-container-full">
+                                {/* GUÍA DE REFERENCIA (Izquierda) */}
+                                <div className="reference-box">
                                     <span className="ref-text-name">{row.data.nombre}</span>
                                     <span className="ref-text-code">{row.data.codigo_usuario}</span>
                                 </div>
-                            </div>
 
-                            {/* ETIQUETAS DE RECORTE (Contenedores Cuadrados: QR + Código) */}
-                            {Array.from({ length: row.labelCount }).map((_, i) => (
-                                <div key={i} className="label-box">
-                                    <div className="label-qr-section">
-                                        <QRCode
-                                            value={row.data.codigo_usuario || String(row.data.id)}
-                                            size={36}
-                                            level="L"
-                                            style={{ width: '100%', height: '100%' }}
-                                            viewBox="0 0 256 256"
-                                        />
+                                {/* BANDERINES (3 por fila) */}
+                                {Array.from({ length: row.labelCount }).map((_, i) => (
+                                    <div key={i} className="dumbbell-label">
+                                        <CutGuide />
+
+                                        {/* Cara A: solo QR, centrado, altura completa del banderín */}
+                                        <div className="label-face label-front">
+                                            <div className="qr-wrapper">
+                                                <QRCode
+                                                    value={row.data.codigo_usuario || String(row.data.id)}
+                                                    size={56}
+                                                    level="L"
+                                                    style={{ width: '100%', height: '100%' }}
+                                                    viewBox="0 0 256 256"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Puente/Cintura (más ancho, sin relleno visual, la guía de corte va en el SVG) */}
+                                        <div className="label-bridge" />
+
+                                        {/* Cara B: Código en 2 líneas + Precio, misma altura que el QR */}
+                                        <div className="label-face label-back">
+                                            <div className="code-block">
+                                                <span className="code-line">{codeLine1}</span>
+                                                {codeLine2 && <span className="code-line">{codeLine2}</span>}
+                                            </div>
+                                            <div className="price-tag">
+                                                S/ {row.data.precio || row.data.precio_venta || '0.00'}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="label-code">{row.data.codigo_usuario}</div>
-                                </div>
-                            ))}
-                        </div>
-                    ))}
+                                ))}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -340,10 +387,12 @@ const ReporteCodigosQR = () => {
                 </div>
             )}
 
+            {/* ESTILOS CSS REUTILIZABLES PARA LA HOJA DE IMPRESIÓN */}
             <style>{`
                 @media screen {
                     .print-view-container { display: none; }
                 }
+
                 .print-view-container.visible-for-capture {
                     display: block !important;
                     position: fixed;
@@ -355,109 +404,140 @@ const ReporteCodigosQR = () => {
                     padding: 8mm;
                     box-sizing: border-box;
                 }
+
                 @media print {
-                    @page { size: A4; margin: 8mm; }
-                    html, body { height: 100%; background: white !important; }
-                    .print-view-container { display: block !important; background: white !important; }
-                    .print\\:hidden { display: none !important; }
+                    @page { 
+                        size: A4; 
+                        margin: 8mm; 
+                    }
+                    body * { 
+                        visibility: hidden; 
+                    }
+                    .print-view-container, .print-view-container * { 
+                        visibility: visible; 
+                    }
+                    .print-view-container { 
+                        display: block !important;
+                        position: absolute; 
+                        left: 0; 
+                        top: 0; 
+                        width: 100%; 
+                    }
                 }
 
                 .print-page-wrapper {
                     display: flex;
                     flex-direction: column;
                     gap: 2mm;
-                    background-color: white !important;
-                    -webkit-print-color-adjust: exact !important;
-                    print-color-adjust: exact !important;
+                    font-family: system-ui, sans-serif;
                 }
 
                 .label-row {
                     display: flex;
-                    flex-direction: row;
-                    gap: 1.5mm;
+                    align-items: center;
+                    gap: 2mm;
                     page-break-inside: avoid;
-                    align-items: center;
                 }
 
-                /* Zona de referencia lateral izquierda */
                 .reference-box {
-                    width: 28mm;
-                    height: 15mm;
-                    display: flex;
-                    align-items: center;
-                    box-sizing: border-box;
-                    padding: 1mm;
-                    background-color: white !important;
-                }
-
-                .ref-text-container-full {
+                    width: 25mm;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
-                    width: 100%;
-                    gap: 1px;
+                    font-size: 6pt;
+                    color: #444;
+                    border-right: 1px dashed #ccc;
+                    padding-right: 1mm;
                 }
 
                 .ref-text-name {
-                    font-size: 5.5pt;
-                    font-family: sans-serif;
                     font-weight: bold;
-                    text-transform: uppercase;
-                    line-height: 1.2;
-                    color: black;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
+                    white-space: nowrap;
                     overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 .ref-text-code {
-                    font-size: 5.5pt;
                     font-family: monospace;
-                    font-weight: bold;
-                    color: #374151;
-                    letter-spacing: 0.02em;
+                    font-size: 5.5pt;
+                    color: #666;
                 }
 
-                /* Etiqueta de recorte CUADRADA 15x15mm */
-                .label-box {
-                    width: 15mm;
-                    height: 15mm;
-                    border: 0.5px solid #d1d5db;
+                /* ESTILO BANDERÍN / HUESO DE PERRO — sin borde/padding propios,          */
+                /* la guía de corte y la línea de doblez las dibuja <CutGuide> encima.    */
+                .dumbbell-label {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    width: 50mm;
+                    height: 11.4mm;
                     box-sizing: border-box;
+                }
+
+                .cut-guide {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                }
+
+                .label-face {
+                    position: relative;
+                    width: 20mm;
+                    height: 100%;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.5mm 0.4mm;
-                    gap: 0.8mm;
-                    background-color: white !important;
-                    overflow: hidden;
+                    padding: 0.8mm 1mm;
+                    box-sizing: border-box;
                 }
 
-                /* Sección de QR */
-                .label-qr-section {
-                    width: 10mm;
-                    height: 10mm;
-                    display: flex;
-                    align-items: center;
+                .label-front {
                     justify-content: center;
-                    flex-shrink: 0;
                 }
 
-                .label-code {
-                    font-size: 4.5pt;
-                    font-family: monospace;
-                    font-weight: bold;
-                    color: #111827;
-                    letter-spacing: -0.01em;
-                    line-height: 1;
-                    margin-top: 0.4mm;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                .qr-wrapper {
+                    width: 9.8mm;
+                    height: 9.8mm;
+                }
+
+                .label-bridge {
+                    position: relative;
+                    width: 10mm;
+                    height: 100%;
+                }
+
+                .label-back {
+                    justify-content: space-between;
                     text-align: center;
-                    max-width: 100%;
+                }
+
+                /* Código en 2 líneas, sin separador */
+                .code-block {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0.3mm;
+                    font-family: monospace;
+                    font-size: 6pt;
+                    font-weight: bold;
+                    color: #000;
+                    line-height: 1.1;
+                }
+
+                .code-line {
+                    white-space: nowrap;
+                }
+
+                /* Precio: peso normal, línea sencilla, misma altura que el QR */
+                .price-tag {
+                    font-size: 7.5pt;
+                    font-weight: 400;
+                    color: #000;
+                    width: 100%;
                 }
             `}</style>
         </div>
