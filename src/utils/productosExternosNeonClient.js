@@ -31,7 +31,7 @@ export const productosExternosDB = {
     const productos = await sql`
       SELECT * FROM productos_externos
       WHERE estado_activo = TRUE AND stock_actual > 0
-      ORDER BY nombre ASC
+      ORDER BY fecha_registro DESC NULLS LAST, id DESC
     `;
     return productos.map(p => ({
       ...p,
@@ -134,7 +134,8 @@ export const productosExternosDB = {
       DO UPDATE SET 
         stock_actual = productos_externos.stock_actual + EXCLUDED.stock_actual,
         precio = EXCLUDED.precio,
-        costo = EXCLUDED.costo
+        costo = EXCLUDED.costo,
+        fecha_registro = NOW()
       RETURNING *
     `;
     return result[0];
@@ -156,7 +157,8 @@ export const productosExternosDB = {
       DO UPDATE SET 
         stock_actual = productos_externos.stock_actual + EXCLUDED.stock_actual,
         precio = EXCLUDED.precio,
-        categoria = COALESCE(productos_externos.categoria, EXCLUDED.categoria)
+        categoria = COALESCE(productos_externos.categoria, EXCLUDED.categoria),
+        fecha_registro = NOW()
       RETURNING *
     `;
     return result[0];

@@ -120,7 +120,7 @@ const Produccion = () => {
         imagen_url: '',
         codigo_producto: '',
         fecha_produccion: getLocalDate(),
-        complejidad: 'Media',
+        complejidad: 'Normal',
         peso_material_gramos: '',
         horas_trabajo_real: '',
         sueldo_hora_objetivo: '15.00',
@@ -362,22 +362,13 @@ const Produccion = () => {
 
     const handleMarkAsComplete = (item) => {
         setItemToFinish(item);
-        const cant = parseInt(item.cantidad) || 1;
-        const costoUnitActual = item.costo_materiales > 0
-            ? (parseFloat(item.costo_materiales) / cant).toFixed(2)
-            : '';
-
         setCostosFormData({
-            costo_unitario_directo: costoUnitActual,
             costo_insumos_extra: item.costo_insumos_extra ? String(item.costo_insumos_extra) : '',
-            precio_venta_sugerido: item.precio_sugerido ? parseFloat(item.precio_sugerido).toFixed(2) : '',
             peso_material_gramos: item.peso_material_gramos ? String(item.peso_material_gramos) : '',
             horas_trabajo_real: item.horas_trabajo_real ? String(item.horas_trabajo_real) : '',
             sueldo_hora_objetivo: '15.00',
-            usar_calculo_detallado: false,
             selected_image_file: null,
-            preview_image_url: item.imagen_url || '',
-            isPrecioEditadoManualmente: Boolean(item.precio_sugerido)
+            preview_image_url: item.imagen_url || ''
         });
         setShowCostosModal(true);
     };
@@ -385,12 +376,19 @@ const Produccion = () => {
     const handleConfirmTerminarWithCostos = async () => {
         if (!itemToFinish) return;
 
+        const { costoMetal, costoManoObra, costoDesgaste, insumosExtra, precioSugeridoUnitario, isValid } = calculoAvanzadoLive;
+
+        if (!isValid) {
+            toast.error('Ingresa las horas de trabajo real. El costo resultante debe ser mayor a 0 S/.');
+            return;
+        }
+
         try {
             setLoading(true);
             let finalImageUrl = itemToFinish.imagen_url || null;
 
             if (costosFormData.selected_image_file) {
-                const optimizedFile = await compressAndResizeImage(costosFormData.selected_image_file, { maxSizeMB: 0.5, maxWidth: 1024, quality: 0.8 });
+                const optimizedFile = await compressAndResizeImage(costosFormData.selected_image_file, { maxSizeMB: 0.3, maxWidth: 800, quality: 0.75 });
                 const fileExtension = optimizedFile.name?.split('.').pop() || 'jpg';
                 const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
                 const storageRef = ref(storage, `produccion/${uniqueId}.${fileExtension}`);
@@ -398,44 +396,14 @@ const Produccion = () => {
                 finalImageUrl = await getDownloadURL(storageRef);
             }
 
-            const cantidad = parseInt(itemToFinish.cantidad) || 1;
-            let costoMaterialTotal = 0;
-            let costoManoObraTotal = 0;
-            let costoDesgasteTotal = 0;
-            let insumosExtra = parseFloat(costosFormData.costo_insumos_extra) || 0;
-            let precioSugerido = parseFloat(costosFormData.precio_venta_sugerido) || 0;
-
-            if (costosFormData.usar_calculo_detallado) {
-                const metalSeleccionado = metalesDisponibles.find(m => m.nombre === itemToFinish.metal);
-                const precioGramoMetal = metalSeleccionado ? parseFloat(metalSeleccionado.precio_gramo) : 0;
-                const peso = parseFloat(costosFormData.peso_material_gramos) || 0;
-                const horas = parseFloat(costosFormData.horas_trabajo_real) || 0;
-                const sueldoHora = parseFloat(costosFormData.sueldo_hora_objetivo) || 15.00;
-                const factores = { 'Baja': 1.0, 'Media': 1.2, 'Alta': 1.5 };
-                const factorComplejidad = factores[itemToFinish.complejidad] || 1.2;
-
-                costoMaterialTotal = peso * precioGramoMetal;
-                costoManoObraTotal = horas * sueldoHora * factorComplejidad;
-                costoDesgasteTotal = (costoMaterialTotal + costoManoObraTotal) * 0.15;
-                if (!precioSugerido) {
-                    precioSugerido = (((costoMaterialTotal + costoManoObraTotal + costoDesgasteTotal) * 2.0) + (insumosExtra * 1.5)) / cantidad;
-                }
-            } else {
-                const costoUnitarioDirecto = parseFloat(costosFormData.costo_unitario_directo) || 0;
-                costoMaterialTotal = (costoUnitarioDirecto * cantidad);
-                if (!precioSugerido && costoUnitarioDirecto > 0) {
-                    precioSugerido = costoUnitarioDirecto * 2.0;
-                }
-            }
-
             await produccionDB.updateCostosReales(itemToFinish.id_produccion, {
                 peso_material_gramos: parseFloat(costosFormData.peso_material_gramos) || 0,
                 horas_trabajo_real: parseFloat(costosFormData.horas_trabajo_real) || 0,
                 costo_insumos_extra: insumosExtra,
-                costo_materiales: costoMaterialTotal,
-                mano_de_obra: costoManoObraTotal,
-                costo_herramientas: costoDesgasteTotal,
-                precio_sugerido: precioSugerido,
+                costo_materiales: costoMetal,
+                mano_de_obra: costoManoObra,
+                costo_herramientas: costoDesgaste,
+                precio_sugerido: precioSugeridoUnitario,
                 imagen_url: finalImageUrl
             });
 
@@ -628,24 +596,41 @@ const Produccion = () => {
     const paginatedProduccion = filteredProduccion.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const calculoAvanzadoLive = useMemo(() => {
-        if (!itemToFinish) return { costoTotalCalculado: 0, costoUnitarioCalculado: 0, costoMetal: 0, costoManoObra: 0, costoDesgaste: 0 };
+        if (!itemToFinish) return { costoMetal: 0, costoManoObra: 0, costoDesgaste: 0, insumosExtra: 0, costoTotalCalculado: 0, costoUnitarioCalculado: 0, precioSugeridoUnitario: 0, isValid: false };
         const cantidad = parseInt(itemToFinish.cantidad) || 1;
-        const metalSeleccionado = metalesDisponibles.find(m => m.nombre === itemToFinish.metal);
-        const precioGramo = metalSeleccionado ? parseFloat(metalSeleccionado.precio_gramo) : 0;
+        const metalSeleccionado = metalesDisponibles.find(m => (m.nombre || '').trim().toLowerCase() === (itemToFinish.metal || '').trim().toLowerCase());
+        const precioGramo = metalSeleccionado ? (parseFloat(metalSeleccionado.precio_gramo) || 0) : 0;
         const peso = parseFloat(costosFormData.peso_material_gramos) || 0;
         const horas = parseFloat(costosFormData.horas_trabajo_real) || 0;
         const sueldoHora = parseFloat(costosFormData.sueldo_hora_objetivo) || 15.00;
-        const factores = { 'Baja': 1.0, 'Media': 1.2, 'Alta': 1.5 };
-        const factorComplejidad = factores[itemToFinish.complejidad] || 1.2;
+        const insumosExtra = parseFloat(costosFormData.costo_insumos_extra) || 0;
+
+        const complejidadVal = itemToFinish.complejidad || 'Normal';
+        const factorComplejidad = (complejidadVal === 'Alta' || complejidadVal === 'Compleja') ? 1.5 : 1.0;
 
         const costoMetal = peso * precioGramo;
         const costoManoObra = horas * sueldoHora * factorComplejidad;
         const costoDesgaste = (costoMetal + costoManoObra) * 0.15;
-        const costoTotalCalculado = costoMetal + costoManoObra + costoDesgaste;
-        const costoUnitarioCalculado = costoTotalCalculado / cantidad;
+        const costoTotalCalculado = costoMetal + costoManoObra + costoDesgaste + insumosExtra;
+        const costoUnitarioCalculado = cantidad > 0 ? (costoTotalCalculado / cantidad) : 0;
+        const precioSugeridoUnitario = cantidad > 0 
+            ? ((((costoMetal + costoManoObra + costoDesgaste) * 2.0) + (insumosExtra * 1.5)) / cantidad) 
+            : 0;
 
-        return { costoMetal, costoManoObra, costoDesgaste, costoTotalCalculado, costoUnitarioCalculado };
-    }, [itemToFinish, costosFormData.peso_material_gramos, costosFormData.horas_trabajo_real, costosFormData.sueldo_hora_objetivo, metalesDisponibles]);
+        const isValid = horas > 0 && costoUnitarioCalculado > 0;
+
+        return { 
+            costoMetal, 
+            costoManoObra, 
+            costoDesgaste, 
+            insumosExtra, 
+            costoTotalCalculado, 
+            costoUnitarioCalculado, 
+            precioSugeridoUnitario, 
+            precioGramo,
+            isValid 
+        };
+    }, [itemToFinish, costosFormData.peso_material_gramos, costosFormData.horas_trabajo_real, costosFormData.costo_insumos_extra, costosFormData.sueldo_hora_objetivo, metalesDisponibles]);
 
     return (
         <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -765,13 +750,13 @@ const Produccion = () => {
                                 <label className="block text-xs font-semibold text-gray-700 mb-1">Complejidad *</label>
                                 <select
                                     name="complejidad"
-                                    className="w-full rounded-md border-gray-300 border p-2 text-sm bg-white"
+                                    className="w-full rounded-md border-gray-300 border p-2 text-sm bg-white font-medium"
                                     value={formData.complejidad}
                                     onChange={handleChange}
                                     required
                                 >
-                                    <option value="Media">Media (Estándar)</option>
-                                    <option value="Alta">Alta (+20% Tiempo)</option>
+                                    <option value="Normal">Normal / Estándar (1.0x)</option>
+                                    <option value="Alta">Alta / Compleja (1.5x)</option>
                                 </select>
                             </div>
                             <div className="md:col-span-1">
@@ -1101,27 +1086,52 @@ const Produccion = () => {
             {/* Modal Registrar Costos al Finalizar */}
             {showCostosModal && itemToFinish && (() => {
                 const cantidad = parseInt(itemToFinish.cantidad) || 1;
-                const costoUnitario = parseFloat(costosFormData.costo_unitario_directo) || 0;
                 const nombreProducto = (itemToFinish.nombre_producto || `${itemToFinish.tipo_producto} · ${itemToFinish.metal}`).toUpperCase();
+                const isValid = calculoAvanzadoLive.isValid;
 
                 return (
-                    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[440px] max-h-[92vh] overflow-hidden flex flex-col border border-gray-100">
-                            <div className="bg-slate-900 px-5 py-4 text-white flex justify-between items-start flex-shrink-0">
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4 animate-in fade-in overflow-y-auto">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[440px] my-auto flex flex-col border border-slate-300 max-h-[90vh] overflow-hidden">
+                            {/* Header con inline-styles anti-override */}
+                            <div
+                                style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+                                className="px-4 py-3.5 flex justify-between items-start flex-shrink-0"
+                            >
                                 <div>
-                                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block mb-0.5">Finalizar Fabricación</span>
-                                    <h3 className="text-sm font-bold tracking-wide">{nombreProducto}</h3>
-                                    <div className="flex gap-2 mt-1">
-                                        <span className="px-2 py-0.5 bg-white/10 rounded text-[10px] uppercase">{itemToFinish.metal}</span>
-                                        <span className="px-2 py-0.5 bg-white/10 rounded text-[10px]">{cantidad} pieza(s)</span>
+                                    <span style={{ color: '#34d399' }} className="text-[10px] font-bold uppercase tracking-wider block mb-0.5">
+                                        Finalizar Fabricación
+                                    </span>
+                                    <h3 style={{ color: '#ffffff' }} className="text-sm font-bold tracking-wide uppercase">
+                                        {nombreProducto}
+                                    </h3>
+                                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                        <span style={{ backgroundColor: '#1e293b', color: '#f1f5f9', borderColor: '#334155' }} className="px-2 py-0.5 border rounded text-[10px] uppercase font-medium">
+                                            {itemToFinish.metal}
+                                        </span>
+                                        <span style={{ backgroundColor: '#1e293b', color: '#f1f5f9', borderColor: '#334155' }} className="px-2 py-0.5 border rounded text-[10px] font-medium">
+                                            {cantidad} pieza(s)
+                                        </span>
+                                        <span style={{ backgroundColor: '#78350f', color: '#fef3c7', borderColor: '#92400e' }} className="px-2 py-0.5 border rounded text-[10px] font-medium">
+                                            Comp: {itemToFinish.complejidad || 'Normal'}
+                                        </span>
                                     </div>
                                 </div>
-                                <button onClick={() => { setShowCostosModal(false); setItemToFinish(null); }} className="text-gray-400 hover:text-white"><FaTimes size={16} /></button>
+                                <button
+                                    onClick={() => { setShowCostosModal(false); setItemToFinish(null); }}
+                                    style={{ color: '#94a3b8' }}
+                                    className="hover:text-white p-1"
+                                >
+                                    <FaTimes size={16} />
+                                </button>
                             </div>
 
-                            <div className="p-4 space-y-4 overflow-y-auto flex-1">
+                            {/* Scrollable Body */}
+                            <div className="p-4 space-y-3.5 overflow-y-auto flex-1 touch-pan-y">
+                                {/* Foto del producto */}
                                 <div>
-                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-2 flex items-center gap-1.5"><FaCamera size={10} /> Foto del producto terminado</label>
+                                    <label className="block text-[11px] font-semibold text-slate-700 uppercase mb-1.5 flex items-center gap-1.5">
+                                        <FaCamera size={11} className="text-slate-500" /> Foto del producto terminado (Opcional)
+                                    </label>
                                     <label className="block cursor-pointer">
                                         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                                             const file = e.target.files?.[0];
@@ -1129,136 +1139,110 @@ const Produccion = () => {
                                             setCostosFormData(prev => ({ ...prev, selected_image_file: file, preview_image_url: URL.createObjectURL(file) }));
                                         }} />
                                         {costosFormData.preview_image_url ? (
-                                            <div className="relative rounded-xl overflow-hidden bg-gray-50 border border-gray-200 h-32">
-                                                <img src={costosFormData.preview_image_url} alt="Vista Previa" className="w-full h-full object-cover" />
+                                            <div style={{ backgroundColor: '#090d16' }} className="relative rounded-xl overflow-hidden flex items-center justify-center h-40 border border-slate-300">
+                                                <img src={costosFormData.preview_image_url} alt="Vista Previa" className="w-full h-full object-contain p-1" />
                                             </div>
                                         ) : (
-                                            <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-gray-100 transition py-4 flex flex-col items-center justify-center gap-1">
-                                                <FaCamera className="text-gray-400" size={16} />
-                                                <span className="text-xs text-gray-400 font-medium">Subir foto del terminado</span>
+                                            <div style={{ backgroundColor: '#f8fafc' }} className="rounded-xl border-2 border-dashed border-slate-300 hover:bg-slate-100 transition py-3.5 flex flex-col items-center justify-center gap-1">
+                                                <FaCamera className="text-slate-400" size={18} />
+                                                <span className="text-xs text-slate-600 font-medium">Subir foto del producto terminado</span>
                                             </div>
                                         )}
                                     </label>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-[11px] text-gray-700 font-semibold mb-1">Costo Unitario por Pieza (S/)</label>
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">S/</span>
-                                            <input
-                                                type="number" step="0.50" min="0" placeholder="0.00"
-                                                value={costosFormData.costo_unitario_directo}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    const numVal = parseFloat(val) || 0;
-                                                    setCostosFormData(prev => ({
-                                                        ...prev,
-                                                        costo_unitario_directo: val,
-                                                        precio_venta_sugerido: !prev.isPrecioEditadoManualmente && numVal > 0 ? (numVal * 2).toFixed(2) : prev.precio_venta_sugerido
-                                                    }));
-                                                }}
-                                                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 font-bold text-gray-800 text-sm focus:ring-2 focus:ring-emerald-400 outline-none"
-                                            />
+                                {/* CAMPOS DE TRABAJO REAL */}
+                                <div style={{ backgroundColor: '#f8fafc' }} className="p-3.5 rounded-xl border border-slate-200 space-y-3">
+                                    <h4 className="text-xs font-semibold text-slate-800 uppercase tracking-tight flex items-center gap-1.5">
+                                        <FaHammer className="text-slate-600" /> Datos de Trabajo Real
+                                    </h4>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-slate-700 uppercase mb-1">Horas de Trabajo *</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number" step="0.1" min="0.1" placeholder="Ej: 1.5" required
+                                                    value={costosFormData.horas_trabajo_real}
+                                                    onChange={(e) => setCostosFormData(prev => ({ ...prev, horas_trabajo_real: e.target.value }))}
+                                                    style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium">hrs</span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-slate-700 uppercase mb-1">Insumos Extra (S/)</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-xs">S/</span>
+                                                <input
+                                                    type="number" step="0.50" min="0" placeholder="0.00"
+                                                    value={costosFormData.costo_insumos_extra}
+                                                    onChange={(e) => setCostosFormData(prev => ({ ...prev, costo_insumos_extra: e.target.value }))}
+                                                    style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                                                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 font-bold text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
+                                    {/* Peso en Gramos */}
                                     <div>
-                                        <label className="block text-[11px] text-gray-600 font-semibold mb-1">Insumos Extra / Piedras (S/)</label>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="text-[10px] font-semibold text-slate-600 uppercase">Peso Total Lote (g)</label>
+                                            <span className="text-[10px] text-slate-500 font-normal">Metal: S/ {calculoAvanzadoLive.precioGramo.toFixed(2)}/g</span>
+                                        </div>
                                         <input
-                                            type="number" step="0.50" placeholder="0.00"
-                                            value={costosFormData.costo_insumos_extra}
-                                            onChange={(e) => setCostosFormData(prev => ({ ...prev, costo_insumos_extra: e.target.value }))}
-                                            className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm"
+                                            type="number" step="0.01" min="0" placeholder="0.00"
+                                            value={costosFormData.peso_material_gramos}
+                                            onChange={(e) => setCostosFormData(prev => ({ ...prev, peso_material_gramos: e.target.value }))}
+                                            style={{ backgroundColor: '#ffffff', color: '#0f172a' }}
+                                            className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium"
                                         />
                                     </div>
+                                </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setCostosFormData(prev => ({ ...prev, usar_calculo_detallado: !prev.usar_calculo_detallado }))}
-                                        className="flex items-center gap-2 text-[11px] text-indigo-600 font-bold hover:underline pt-1"
-                                    >
-                                        <FaCalculator /> Calcular por Peso (g) y Horas de Trabajo
-                                    </button>
+                                {/* TARJETA DE CÁLCULO EN VIVO */}
+                                <div style={{ backgroundColor: '#ffffff' }} className="rounded-xl p-3.5 border border-slate-200 shadow-sm space-y-3">
+                                    <div className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-1.5 flex justify-between items-center">
+                                        <span>Cálculo Automático en Vivo</span>
+                                        <span className="text-slate-500 font-normal">{cantidad} {cantidad === 1 ? 'unidad' : 'unidades'}</span>
+                                    </div>
 
-                                    {costosFormData.usar_calculo_detallado && (
-                                        <div className="bg-indigo-50/70 rounded-xl p-3 border border-indigo-100 space-y-3">
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label className="block text-[10px] text-indigo-800 font-bold mb-1">Peso (g)</label>
-                                                    <input
-                                                        type="number" step="0.01" placeholder="0.00"
-                                                        value={costosFormData.peso_material_gramos}
-                                                        onChange={(e) => setCostosFormData(prev => ({ ...prev, peso_material_gramos: e.target.value }))}
-                                                        className="w-full px-2.5 py-1.5 rounded-lg border border-indigo-200 text-xs bg-white font-bold"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] text-indigo-800 font-bold mb-1">Tiempo (Horas)</label>
-                                                    <input
-                                                        type="number" step="0.5" placeholder="0.0"
-                                                        value={costosFormData.horas_trabajo_real}
-                                                        onChange={(e) => setCostosFormData(prev => ({ ...prev, horas_trabajo_real: e.target.value }))}
-                                                        className="w-full px-2.5 py-1.5 rounded-lg border border-indigo-200 text-xs bg-white font-bold"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-white rounded-lg p-2.5 border border-indigo-100 text-[10px] space-y-1">
-                                                <div className="flex justify-between text-gray-500">
-                                                    <span>Metal ({itemToFinish.metal}):</span>
-                                                    <span className="font-semibold">S/ {calculoAvanzadoLive.costoMetal.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between text-gray-500">
-                                                    <span>Mano de Obra + Desgaste:</span>
-                                                    <span className="font-semibold">S/ {(calculoAvanzadoLive.costoManoObra + calculoAvanzadoLive.costoDesgaste).toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between text-indigo-900 font-bold border-t pt-1">
-                                                    <span>Costo Unitario Resultante:</span>
-                                                    <span className="text-xs">S/ {calculoAvanzadoLive.costoUnitarioCalculado.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const res = calculoAvanzadoLive.costoUnitarioCalculado.toFixed(2);
-                                                    setCostosFormData(prev => ({
-                                                        ...prev,
-                                                        costo_unitario_directo: res,
-                                                        precio_venta_sugerido: !prev.isPrecioEditadoManualmente ? (parseFloat(res) * 2).toFixed(2) : prev.precio_venta_sugerido
-                                                    }));
-                                                    toast.success('Costo aplicado al registro');
-                                                }}
-                                                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-[10px] tracking-wider uppercase"
-                                            >
-                                                Aplicar costo al registro
-                                            </button>
+                                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                                        <div style={{ backgroundColor: '#f8fafc' }} className="p-2 rounded-lg border border-slate-100">
+                                            <span className="text-[10px] text-slate-500 block uppercase font-normal">Costo Metal Lote</span>
+                                            <span className="font-semibold text-slate-800 text-xs">S/ {calculoAvanzadoLive.costoMetal.toFixed(2)}</span>
                                         </div>
-                                    )}
+                                        <div style={{ backgroundColor: '#f8fafc' }} className="p-2 rounded-lg border border-slate-100">
+                                            <span className="text-[10px] text-slate-500 block uppercase font-normal">Mano Obra + Desgaste</span>
+                                            <span className="font-semibold text-slate-800 text-xs">S/ {(calculoAvanzadoLive.costoManoObra + calculoAvanzadoLive.costoDesgaste).toFixed(2)}</span>
+                                        </div>
+                                    </div>
 
-                                    <div>
-                                        <label className="block text-[11px] font-bold text-gray-700 mb-1">Precio de Venta Sugerido (S/)</label>
-                                        <input
-                                            type="number" step="0.50" placeholder="0.00"
-                                            value={costosFormData.precio_venta_sugerido}
-                                            onChange={(e) => setCostosFormData(prev => ({
-                                                ...prev,
-                                                precio_venta_sugerido: e.target.value,
-                                                isPrecioEditadoManualmente: true
-                                            }))}
-                                            className="w-full px-3 py-2.5 rounded-xl border border-amber-200 bg-amber-50/50 font-bold text-amber-900 text-sm focus:ring-2 focus:ring-amber-400 outline-none"
-                                        />
+                                    {/* Costo Unitario Resultante destacado */}
+                                    <div style={{ backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }} className="p-3 rounded-xl border text-center">
+                                        <span style={{ color: '#065f46' }} className="text-[11px] font-bold uppercase tracking-tight block">Costo Unitario Resultante</span>
+                                        <span style={{ color: '#047857' }} className="text-xl font-extrabold block mt-0.5">S/ {calculoAvanzadoLive.costoUnitarioCalculado.toFixed(2)}</span>
+                                    </div>
+
+                                    {/* Precio de Venta Sugerido - Minimalista */}
+                                    <div className="text-center pt-0.5">
+                                        <span className="text-[11px] text-slate-500 font-normal">
+                                            Precio de venta sugerido: <span className="font-semibold text-slate-700">S/ {calculoAvanzadoLive.precioSugeridoUnitario.toFixed(2)}</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* FOOTER BOTÓN VERDE CORREGIDO */}
-                            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3 flex-shrink-0">
+                            {/* FOOTER */}
+                            <div style={{ backgroundColor: '#f8fafc' }} className="p-3.5 border-t border-slate-200 flex gap-3 flex-shrink-0">
                                 <button
                                     type="button"
                                     onClick={() => { setShowCostosModal(false); setItemToFinish(null); }}
-                                    className="flex-1 py-3 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-xs uppercase"
+                                    style={{ backgroundColor: '#ffffff', color: '#334155', borderColor: '#cbd5e1' }}
+                                    className="flex-1 py-2.5 border hover:bg-slate-100 rounded-xl font-semibold text-xs uppercase"
                                 >
                                     Cancelar
                                 </button>
@@ -1266,18 +1250,27 @@ const Produccion = () => {
                                 <button
                                     type="button"
                                     onClick={handleConfirmTerminarWithCostos}
-                                    disabled={loading}
-                                    className="flex-[2] py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 cursor-pointer"
+                                    disabled={loading || !isValid}
+                                    style={
+                                        isValid
+                                            ? { backgroundColor: '#059669', color: '#ffffff', borderColor: '#047857' }
+                                            : { backgroundColor: '#334155', color: '#ffffff', borderColor: '#1e293b' }
+                                    }
+                                    className={`flex-[2] py-2.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm ${
+                                        isValid ? 'cursor-pointer active:scale-95' : 'cursor-not-allowed opacity-90'
+                                    }`}
                                 >
                                     {loading ? (
                                         <>
                                             <FaSpinner className="animate-spin text-white" size={14} />
-                                            <span className="text-white font-bold">Procesando...</span>
+                                            <span style={{ color: '#ffffff' }} className="font-bold">Procesando...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <FaCheck className="text-white" size={16} />
-                                            <span className="text-white font-extrabold drop-shadow-sm">Confirmar y Finalizar</span>
+                                            <FaCheck style={{ color: '#ffffff' }} size={15} />
+                                            <span style={{ color: '#ffffff' }} className="font-bold">
+                                                Confirmar y Finalizar
+                                            </span>
                                         </>
                                     )}
                                 </button>

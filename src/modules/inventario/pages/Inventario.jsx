@@ -71,7 +71,7 @@ export default function Inventario() {
     const categorias = [...new Set(productos.map(p => p.categoria?.toUpperCase()).filter(Boolean))].sort();
     const metales = [...new Set(productos.map(p => p.material?.toUpperCase()).filter(Boolean))].sort();
 
-    // ── Grid filtrado ──────────────────────────────────────────
+    // ── Grid filtrado (ordenado por fecha de ingreso reciente: lo último ingresado primero) ──
     const filteredProductos = productos.filter(p => {
         const hasStock = p.stock_actual > 0;
         const matchesSearch =
@@ -80,6 +80,12 @@ export default function Inventario() {
         const matchesCategory = !selectedCategory || (p.categoria?.toUpperCase() === selectedCategory);
         const matchesMetal = !selectedMetal || (p.material?.toUpperCase() === selectedMetal);
         return hasStock && matchesSearch && matchesCategory && matchesMetal;
+    });
+
+    const sortedProductos = [...filteredProductos].sort((a, b) => {
+        const timeA = a.fecha_registro ? new Date(a.fecha_registro).getTime() : Number(a.id || 0);
+        const timeB = b.fecha_registro ? new Date(b.fecha_registro).getTime() : Number(b.id || 0);
+        return timeB - timeA;
     });
 
     // ── Tarjeta resumen ────────────────────────────────────────
@@ -247,7 +253,7 @@ export default function Inventario() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filteredProductos.map(p => {
+                            {sortedProductos.map(p => {
                                 const stock = Number(p.stock_actual) || 0;
                                 const costo = Number(p.costo) || 0;
                                 const precio = Number(p.precio) || 0;
@@ -325,7 +331,7 @@ export default function Inventario() {
                         </tbody>
 
                         {/* Fila de totales */}
-                        {filteredProductos.length > 0 && (
+                        {sortedProductos.length > 0 && (
                             <tfoot className="bg-gray-50 border-t-2 border-gray-200">
                                 <tr>
                                     <td colSpan={4} className="px-4 py-3 text-xs font-bold text-gray-500 uppercase">
@@ -356,7 +362,7 @@ export default function Inventario() {
                         )}
                     </table>
 
-                    {!loading && filteredProductos.length === 0 && (
+                    {!loading && sortedProductos.length === 0 && (
                         <div className="text-center py-16 text-gray-400">
                             <FaBox className="mx-auto text-3xl mb-3 opacity-30" />
                             <p className="text-sm">No hay productos con stock disponible</p>

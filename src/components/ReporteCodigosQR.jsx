@@ -25,15 +25,7 @@ const splitCodeForLabel = (code) => {
     return [parts.slice(0, mid).join('-'), parts.slice(mid).join('-')];
 };
 
-// Guía de corte tipo "hueso de perro": contorno completo del sticker con la cintura
-// central afinada en ángulo recto (fácil de cortar a mano). Línea sólida y fina,
-// separada del contenido por el padding de .label-face / .label-back.
-// totalWidth/totalHeight en mm, deben coincidir con .dumbbell-label
-// Guía de corte tipo "cintura de avispa": contorno completo del sticker con la cintura
-// central afinada en curva suave (no en ángulo recto), que arranca casi al terminar
-// el QR y no se pinza demasiado en el centro. Línea sólida y fina, separada del
-// contenido por el padding de .label-face / .label-back.
-// totalWidth/totalHeight en mm, deben coincidir con .dumbbell-label
+// Guía de corte tipo "cintura de avispa" en SVG
 const CutGuide = ({ totalWidth = 50, totalHeight = 11.4, faceWidth = 12, waistInset = 1.2, waistFlatHalf = 2, curveSpread = 5 }) => {
     const bridgeStart = faceWidth;
     const bridgeEnd = totalWidth - faceWidth;
@@ -64,8 +56,11 @@ const ReporteCodigosQR = () => {
     const [selectedIds, setSelectedIds] = useState([]);
     const [printQuantities, setPrintQuantities] = useState({});
     const [showBatchModal, setShowBatchModal] = useState(false);
-    const [isPrintReady, setIsPrintReady] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
+
+    // NUEVO: Estado para alternar entre A6 (Mini) y A4
+    const [paperSize, setPaperSize] = useState('A6');
+
     const printRef = useRef(null);
 
     useEffect(() => { loadData(); }, []);
@@ -116,18 +111,16 @@ const ReporteCodigosQR = () => {
 
     const confirmPrint = () => {
         setShowBatchModal(false);
-        setIsPrintReady(true);
         setTimeout(() => {
             window.print();
-            setIsPrintReady(false);
-        }, 1000);
+        }, 500);
     };
 
     const handleDownloadSheet = async () => {
         if (selectedIds.length === 0) return;
         try {
             setIsDownloading(true);
-            const loadingToast = toast.loading('Preparando imagen A4...');
+            const loadingToast = toast.loading(`Preparando imagen ${paperSize}...`);
             await new Promise(resolve => setTimeout(resolve, 500));
             const element = printRef.current;
             const originalClass = element.className;
@@ -141,7 +134,7 @@ const ReporteCodigosQR = () => {
             });
             element.className = originalClass;
             const link = document.createElement('a');
-            link.download = `etiquetas-enigma-${Date.now()}.png`;
+            link.download = `etiquetas-enigma-${paperSize}-${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             document.body.appendChild(link);
             link.click();
@@ -173,13 +166,16 @@ const ReporteCodigosQR = () => {
 
     const selectedProductsData = productos.filter(p => selectedIds.includes(p.id));
 
-    // Generador de filas ajustado para acomodar etiquetas más anchas (banderines)
+    // Generador de filas adaptativo según el tamaño de papel seleccionado
     const generateRows = () => {
         let rows = [];
+        // En A6 (Vertical) entra 1 etiqueta por fila. En A4 entran 3 etiquetas horizontales.
+        const maxLabelsPerRow = paperSize === 'A6' ? 1 : 3;
+
         selectedProductsData.forEach(prod => {
             let labelsLeft = printQuantities[prod.id] || 10;
             while (labelsLeft > 0) {
-                const labelsInThisRow = Math.min(labelsLeft, 3); // 3 banderines horizontales por fila
+                const labelsInThisRow = Math.min(labelsLeft, maxLabelsPerRow);
                 rows.push({ data: prod, labelCount: labelsInThisRow });
                 labelsLeft -= labelsInThisRow;
             }
@@ -289,7 +285,7 @@ const ReporteCodigosQR = () => {
                 )}
             </div>
 
-            {/* VISTA DE IMPRESIÓN (Estructura Banderín Doble Cara) */}
+            {/* VISTA DE IMPRESIÓN */}
             <div className={`print-view-container ${isDownloading ? 'visible-for-capture' : ''}`} ref={printRef}>
                 <div className="print-page-wrapper">
                     {generateRows().map((row, idx) => {
@@ -303,12 +299,12 @@ const ReporteCodigosQR = () => {
                                     <span className="ref-text-code">{row.data.codigo_usuario}</span>
                                 </div>
 
-                                {/* BANDERINES (3 por fila) */}
+                                {/* BANDERINES (1 en A6 / hasta 3 en A4) */}
                                 {Array.from({ length: row.labelCount }).map((_, i) => (
                                     <div key={i} className="dumbbell-label">
                                         <CutGuide />
 
-                                        {/* Cara A: solo QR, centrado, altura completa del banderín */}
+                                        {/* Cara A: QR */}
                                         <div className="label-face label-front">
                                             <div className="qr-wrapper">
                                                 <QRCode
@@ -321,10 +317,10 @@ const ReporteCodigosQR = () => {
                                             </div>
                                         </div>
 
-                                        {/* Puente/Cintura (más ancho, sin relleno visual, la guía de corte va en el SVG) */}
+                                        {/* Puente/Cintura */}
                                         <div className="label-bridge" />
 
-                                        {/* Cara B: Código en 2 líneas + Precio, misma altura que el QR */}
+                                        {/* Cara B: Código + Precio */}
                                         <div className="label-face label-back">
                                             <div className="code-block">
                                                 <span className="code-line">{codeLine1}</span>
@@ -354,51 +350,83 @@ const ReporteCodigosQR = () => {
                             <p className="text-indigo-100 text-xs mt-1">{selectedIds.length} productos seleccionados.</p>
                         </div>
 
-                        <div className="p-4 sm:p-6 space-y-6">
+                        <div className="p-4 sm:p-6 space-y-5">
+
+                            {/* Selector de Tamaño de Papel */}
                             <div>
-                                <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Cantidades a Imprimir</label>
-                                <div className="max-h-[30vh] overflow-y-auto space-y-3 pr-2">
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-wider mb-2">
+                                    Tamaño de Papel Físico
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaperSize('A6')}
+                                        className={`py-2 px-3 rounded-xl font-bold text-xs border transition-all ${paperSize === 'A6'
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        📄 Mini A6 (105x148mm)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaperSize('A4')}
+                                        className={`py-2 px-3 rounded-xl font-bold text-xs border transition-all ${paperSize === 'A4'
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        📜 Hoja A4 (210x297mm)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3">
+                                    Cantidades a Imprimir
+                                </label>
+                                <div className="max-h-[25vh] overflow-y-auto space-y-2.5 pr-1">
                                     {selectedProductsData.map(prod => (
                                         <div key={prod.id} className="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-100">
                                             <div className="flex flex-col items-start min-w-0 pr-2">
                                                 <span className="font-mono text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-bold">{prod.codigo_usuario}</span>
-                                                <span className="text-xs text-gray-600 font-medium truncate w-32 sm:w-40 text-left">{prod.nombre}</span>
+                                                <span className="text-xs text-gray-600 font-medium truncate w-28 sm:w-36 text-left">{prod.nombre}</span>
                                             </div>
-                                            <div className="flex items-center gap-3 shrink-0">
-                                                <button onClick={() => updateQuantity(prod.id, -1)} className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100">
-                                                    <FaMinus size={10} />
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <button onClick={() => updateQuantity(prod.id, -1)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                                                    <FaMinus size={9} />
                                                 </button>
-                                                <span className="text-lg font-black text-gray-800 w-8 text-center">{printQuantities[prod.id] || 10}</span>
-                                                <button onClick={() => updateQuantity(prod.id, 1)} className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100">
-                                                    <FaPlus size={10} />
+                                                <span className="text-sm font-black text-gray-800 w-6 text-center">{printQuantities[prod.id] || 10}</span>
+                                                <button onClick={() => updateQuantity(prod.id, 1)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                                                    <FaPlus size={9} />
                                                 </button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-                                <p className="mt-4 text-sm text-gray-500 border-t pt-4 text-center">
+                                <p className="mt-3 text-xs text-gray-500 border-t pt-3 text-center">
                                     Total: <strong>{selectedProductsData.reduce((acc, p) => acc + (printQuantities[p.id] || 10), 0)}</strong> etiquetas
                                 </p>
                             </div>
 
                             <button onClick={confirmPrint} disabled={isDownloading}
-                                className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3 disabled:bg-gray-400">
-                                <FaPrint /> Confirmar e Imprimir
+                                className="w-full bg-indigo-600 text-white py-3.5 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:bg-gray-400 text-sm">
+                                <FaPrint /> Confirmar e Imprimir ({paperSize})
                             </button>
 
                             <button onClick={handleDownloadSheet} disabled={isDownloading}
-                                className="w-full bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                                className="w-full bg-white border-2 border-indigo-600 text-indigo-600 py-3.5 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50">
                                 {isDownloading
-                                    ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
+                                    ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
                                     : <FaPrint />}
-                                Descargar Hoja (Imagen A4)
+                                Descargar Hoja (Imagen {paperSize})
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ESTILOS CSS REUTILIZABLES PARA LA HOJA DE IMPRESIÓN */}
+            {/* ESTILOS CSS ADAPTATIVOS A4 / A6 */}
             <style>{`
                 @media screen {
                     .print-view-container { display: none; }
@@ -409,17 +437,17 @@ const ReporteCodigosQR = () => {
                     position: fixed;
                     left: -9999px;
                     top: 0;
-                    width: 210mm;
+                    width: ${paperSize === 'A6' ? '105mm' : '210mm'};
                     background: white !important;
                     z-index: -1;
-                    padding: 8mm;
+                    padding: ${paperSize === 'A6' ? '4mm' : '8mm'};
                     box-sizing: border-box;
                 }
 
                 @media print {
                     @page { 
-                        size: A4; 
-                        margin: 8mm; 
+                        size: ${paperSize === 'A6' ? 'A6 portrait' : 'A4 portrait'}; 
+                        margin: ${paperSize === 'A6' ? '4mm' : '8mm'}; 
                     }
                     body * { 
                         visibility: hidden; 
@@ -439,7 +467,7 @@ const ReporteCodigosQR = () => {
                 .print-page-wrapper {
                     display: flex;
                     flex-direction: column;
-                    gap: 2mm;
+                    gap: 1.5mm;
                     font-family: system-ui, sans-serif;
                 }
 
@@ -451,19 +479,20 @@ const ReporteCodigosQR = () => {
                 }
 
                 .reference-box {
-                    width: 16mm;
+                    width: 14mm;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
                     color: #444;
                     border-right: 1px dashed #ccc;
                     padding-right: 1mm;
+                    flex-shrink: 0;
                 }
 
                 .ref-text-name {
                     font-weight: bold;
-                    font-size: 5pt;
-                    line-height: 1.15;
+                    font-size: 4.5pt;
+                    line-height: 1.1;
                     white-space: normal;
                     word-break: break-word;
                     display: -webkit-box;
@@ -474,14 +503,12 @@ const ReporteCodigosQR = () => {
 
                 .ref-text-code {
                     font-family: monospace;
-                    font-size: 4.5pt;
-                    line-height: 1.15;
+                    font-size: 4pt;
+                    line-height: 1;
                     color: #666;
                     word-break: break-word;
                 }
 
-                /* ESTILO BANDERÍN / HUESO DE PERRO — sin borde/padding propios,          */
-                /* la guía de corte y la línea de doblez las dibuja <CutGuide> encima.    */
                 .dumbbell-label {
                     position: relative;
                     display: flex;
@@ -489,6 +516,7 @@ const ReporteCodigosQR = () => {
                     width: 50mm;
                     height: 11.4mm;
                     box-sizing: border-box;
+                    flex-shrink: 0;
                 }
 
                 .cut-guide {
@@ -512,28 +540,12 @@ const ReporteCodigosQR = () => {
                     box-sizing: border-box;
                 }
 
-                .label-front {
-                    align-items: flex-start;
-                }
+                .label-front { align-items: flex-start; }
+                .label-back { align-items: flex-end; justify-content: space-between; text-align: center; }
 
-                .label-back {
-                    align-items: flex-end;
-                    justify-content: space-between;
-                    text-align: center;
-                }
+                .qr-wrapper { width: 9.8mm; height: 9.8mm; }
+                .label-bridge { position: relative; width: 10mm; height: 100%; }
 
-                .qr-wrapper {
-                    width: 9.8mm;
-                    height: 9.8mm;
-                }
-
-                .label-bridge {
-                    position: relative;
-                    width: 10mm;
-                    height: 100%;
-                }
-
-                /* Código en 2 líneas, sin separador */
                 .code-block {
                     display: flex;
                     flex-direction: column;
@@ -546,11 +558,8 @@ const ReporteCodigosQR = () => {
                     line-height: 1.1;
                 }
 
-                .code-line {
-                    white-space: nowrap;
-                }
+                .code-line { white-space: nowrap; }
 
-                /* Precio: peso normal, línea sencilla, misma altura que el QR */
                 .price-tag {
                     font-size: 7.5pt;
                     font-weight: 400;
